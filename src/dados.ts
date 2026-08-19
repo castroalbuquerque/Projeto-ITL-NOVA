@@ -30,6 +30,7 @@ export interface Passageiro {
   ocorrenciasAbertas: number;
   passagensNaoUsadas: number; // gatilho padrão
   gastoEmAlta: boolean; // gatilho marco
+  linhaHabitual: string | null; // linha que ele mais usava; null = sem histórico
 }
 
 /** Faixa de frequência dos passageiros anônimos que também estão a bordo. */
@@ -82,6 +83,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Interior',
   },
   {
     // p.1 — só três viagens, a segunda terminou em quebra sem aviso, sumiu há seis meses.
@@ -100,6 +102,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 1,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Interior',
   },
   {
     // p.2 — semanal a trabalho, cliente há seis anos.
@@ -119,6 +122,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: true,
+    linhaHabitual: 'Capital–Sul',
   },
   {
     // p.2 — uma ou duas viagens por ano; viaja pouco demais para ser classificada com segurança.
@@ -136,6 +140,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Sul',
   },
   {
     // p.2 e p.3 — primeira viagem, comprou na véspera. Sem histórico nenhum.
@@ -155,6 +160,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: null,
   },
   {
     // p.3 — grupo 1 e fora do alcance digital ao mesmo tempo. É o caso que o quadro da p.7
@@ -173,6 +179,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Nordeste',
   },
   {
     // p.4 — sumiu há sete meses, compra pelo aplicativo, autorizou. Alcançável de verdade.
@@ -190,6 +197,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Interior',
   },
   {
     // p.4 — sumiu há oito meses, comprava no guichê, nunca autorizou.
@@ -208,6 +216,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Nordeste',
   },
   {
     // p.5 — quinta viagem em quatro meses, gasto do trimestre acima do ritmo anterior.
@@ -225,6 +234,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: true,
+    linhaHabitual: 'Capital–Sul',
   },
   {
     // p.5 — mesmo marco da Letícia, autorização dada, e nenhum contato cadastrado.
@@ -243,6 +253,7 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 0,
     gastoEmAlta: true,
+    linhaHabitual: 'Capital–Sul',
   },
   {
     // p.6 — seis passagens no semestre, embarcou em duas. Quatro não usadas.
@@ -260,8 +271,20 @@ export const PASSAGEIROS: Passageiro[] = [
     ocorrenciasAbertas: 0,
     passagensNaoUsadas: 4,
     gastoEmAlta: false,
+    linhaHabitual: 'Capital–Interior',
   },
 ];
+
+/**
+ * O que mudou em cada linha desde que o passageiro parou de viajar. É daqui que
+ * sai o motivo concreto do convite de retorno: sem isso, o convite vira desconto
+ * genérico, que é justamente o que a página 4 do relatório critica.
+ */
+export const NOVIDADES_POR_LINHA: Record<string, string> = {
+  'Capital–Interior': 'agora há saída também às 19h, com poltrona que reclina mais',
+  'Capital–Sul': 'agora há saída também às 14h, e o trecho final deixou de ter parada',
+  'Capital–Nordeste': 'a frota da noturna foi trocada, com poltrona-cama em todos os horários',
+};
 
 export const VIAGENS: Viagem[] = [
   {
@@ -355,7 +378,8 @@ export function conferenciaDeCadastro() {
 // Banco de mensagens. Escritas à mão para o exercício, nenhuma gerada em runtime.
 // Regra de redação: até 320 caracteres, sem emoji, sem pedido de desculpas
 // genérico, sempre com o próximo passo concreto e o horário revisado.
-// Placeholders: {nome} {linha} {horarioPartida} {horarioRevisado} {compensacao} {plataforma}
+// Placeholders: {nome} {linha} {horarioPartida} {horarioRevisado} {compensacao}
+//               {plataforma} {novidade}
 // ---------------------------------------------------------------------------
 
 export const MENSAGENS: Record<string, string> = {
@@ -399,9 +423,13 @@ export const MENSAGENS: Record<string, string> = {
     '{nome}, sua viagem na {linha} sai às {horarioRevisado}, na plataforma {plataforma}. O embarque começa vinte minutos antes. Se alguma coisa mudar, avisamos por aqui antes de você sair de casa.',
 
   'winback:reconquista':
-    '{nome}, faz tempo que você não viaja com a gente. A {linha} agora tem saída também às {horarioRevisado}, com poltrona que reclina mais. Se quiser experimentar, {compensacao}',
+    '{nome}, faz tempo que você não viaja com a gente. Na {linha}, {novidade}. Se quiser experimentar, {compensacao}',
+  // Quando não se sabe o que mudou na linha, o convite não inventa um motivo.
+  'winback:reconquista_sem_novidade':
+    '{nome}, faz tempo que você não viaja com a gente. Se quiser experimentar, {compensacao}',
+  // Quem sumiu depois de uma falha recebe desculpa antes de oferta, nunca as duas juntas.
   'winback:reparador':
-    '{nome}, sua última viagem na {linha} terminou mal e o caso continua aberto do nosso lado. Antes de qualquer oferta queremos resolver isso: um atendente liga hoje até {horarioRevisado}. {compensacao}',
+    '{nome}, sua última viagem na {linha} terminou mal e o caso continua aberto do nosso lado. Antes de qualquer oferta queremos resolver isso: um atendente liga para você ainda hoje.',
 
   'marco:informativo':
     '{nome}, esta é a sua quinta viagem em quatro meses e a gente reparou. Na próxima, {compensacao} Vale até o fim do mês e é só escolher na hora de comprar.',

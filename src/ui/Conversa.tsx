@@ -1,4 +1,4 @@
-import { MENSAGENS, passageiroPorId, type Viagem } from '../dados';
+import { MENSAGENS, NOVIDADES_POR_LINHA, passageiroPorId, type Viagem } from '../dados';
 import { REGRAS, type Compensacao, type Decisao, type Gatilho } from '../motor';
 import { Etiqueta } from './Etiqueta';
 
@@ -29,7 +29,9 @@ export function momentoDoEvento(g: Gatilho, v: Viagem | null): string {
 }
 
 export function horarioRevisado(g: Gatilho, v: Viagem | null): string {
-  if (!v) return '18:00';
+  // Sem viagem não há horário revisado, e inventar um seria afirmar ao passageiro
+  // um fato que não existe em dado nenhum. Nenhuma mensagem sem viagem o usa.
+  if (!v) return '';
   if (g.tipo !== 'ocorrencia') return v.partida;
   if (g.ocorrencia === 'cancelamento') return v.proximaSaida;
   if (g.ocorrencia === 'mudanca_plataforma') return v.partida;
@@ -60,9 +62,12 @@ function fraseDeCompensacao(comps: Compensacao[]): string {
 export function renderizar(chave: string, d: Decisao, g: Gatilho, v: Viagem | null): string {
   const modelo = MENSAGENS[chave];
   if (!modelo) return `[sem mensagem para ${chave}]`;
+  const p = passageiroPorId(d.passageiroId);
+  const linha = v ? v.linha : p.linhaHabitual;
   return modelo
     .replace(/\{nome\}/g, d.nome)
-    .replace(/\{linha\}/g, v ? v.linha : 'sua linha')
+    .replace(/\{linha\}/g, linha ?? 'sua linha')
+    .replace(/\{novidade\}/g, (linha && NOVIDADES_POR_LINHA[linha]) ?? '')
     .replace(/\{horarioRevisado\}/g, hora(horarioRevisado(g, v)))
     .replace(/\{horarioPartida\}/g, v ? hora(v.partida) : 'sua saída')
     .replace(/\{plataforma\}/g, v ? v.plataforma : '—')

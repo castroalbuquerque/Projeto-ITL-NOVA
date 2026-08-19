@@ -131,37 +131,55 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 
 ## Página 4 — a reconquista
 
-14. **A mensagem do Jorge promete uma personalização que o sistema não entrega.** Hoje o relatório
-    diz "A linha que você usava agora tem saída também às 19h". O gatilho de win-back não carrega
-    viagem nenhuma — ele parte de uma revisão mensal de quem sumiu, não de um bilhete —, então o
-    texto real sai genérico: "A sua linha agora tem saída também às 18h00". Ou o relatório adota o
-    texto genérico, ou registra que ligar o convite à linha específica do passageiro exige um dado
-    que o gatilho ainda não recebe. Prefiro a segunda: a promessa é boa, só não está construída.
+14. **A mensagem do Jorge continua como está, e agora o protótipo a sustenta.** Quando escrevi este
+    prompt, o convite saía genérico — "a sua linha", com um horário inventado — porque o gatilho de
+    win-back nasce de uma revisão mensal de quem sumiu e não carrega viagem nenhuma. Isso foi
+    construído depois: cada passageiro passou a ter uma linha habitual, e cada linha, um registro do
+    que mudou nela. O texto que sai hoje é este, e a página não precisa mudar:
+
+    > "Jorge, faz tempo que você não viaja com a gente. Na Capital–Interior, agora há saída também
+    > às 19h, com poltrona que reclina mais. Se quiser experimentar, a próxima viagem sai com 25% de
+    > desconto até domingo."
+
+15. **O caminho "sumiu logo depois de uma falha" existe no fluxograma e não tem por onde acontecer.**
+    A página descreve três caminhos para a lista mensal, e o terceiro — quem sumiu depois de uma
+    falha recebe desculpa antes de oferta — nunca dispara. O único passageiro com ocorrência aberta
+    é o Carlos, e ele não autorizou receber ofertas, então o freio da autorização barra o convite
+    antes de qualquer escolha de tom. O caminho está desenhado e vazio.
+
+    Isso não é erro de desenho: é uma pergunta que o material nunca respondeu. **Resolver o caso
+    aberto de alguém é propaganda ou é atendimento?** Se for atendimento, não deveria depender de
+    autorização comercial nenhuma — a base legal é o contrato de transporte que falhou, e a página
+    7 já diz que a política do grupo 5 é "atendimento caso a caso, um a um". Se for propaganda, o
+    caminho continua correto e simplesmente não se aplica a este elenco de onze pessoas.
+
+    Registre a pergunta na página, sem responder por conta própria: é decisão de quem responde pela
+    política de dados, não de quem desenha o relatório.
 
 ## Página 5 — o grupo esquecido
 
-15. **A mensagem da Letícia** confere e fica como está. Sobre o Marcos, acrescente o que o sistema
+16. **A mensagem da Letícia** confere e fica como está. Sobre o Marcos, acrescente o que o sistema
     faz em vez de enviar: "Registrado em lista à parte — o contato fora do digital depende de
     decisão de uma pessoa". Hoje a página diz que nada sai, mas não diz o que fica registrado.
 
 ## Página 6 — o grupo sem campanha
 
-16. **O padrão detectado do Wilson.** A página diz "Três passagens compradas e não usadas em seis
+17. **O padrão detectado do Wilson.** A página diz "Três passagens compradas e não usadas em seis
     meses", mas o próprio cartão diz que ele comprou seis e embarcou em duas, o que dá quatro.
     Três é o limiar da regra, quatro é o caso dele. Corrija para "Quatro passagens compradas e não
     usadas em seis meses · limiar da regra: três".
 
 ## Página 7 — o mapa
 
-17. **A política do grupo 5** ganha o prazo que a regra nova define: "Desculpa com algo concreto e
+18. **A política do grupo 5** ganha o prazo que a regra nova define: "Desculpa com algo concreto e
     atendimento caso a caso, um a um, com ligação em até cinco minutos".
 
-18. **O quadro de duas perguntas** está correto e não muda. Ele foi o que mais se confirmou na
+19. **O quadro de duas perguntas** está correto e não muda. Ele foi o que mais se confirmou na
     implementação: os onze passageiros caem exatamente nos quatro quadrantes descritos, e o Marcos
     continua sendo o único caso em que autorização e alcance apontam para lados diferentes.
 
 ## Ao terminar
 
-Liste, em não mais que dez linhas, o que você mudou e a decisão que pedi que você tomasse
-(item 14 — a única que continua em aberto). Se encontrar no relatório alguma outra afirmação que o protótipo não sustenta,
+Liste, em não mais que dez linhas, o que você mudou. Não há mais decisão em aberto para você tomar:
+o item 15 pede que você registre uma pergunta na página, não que a responda. Se encontrar no relatório alguma outra afirmação que o protótipo não sustenta,
 diga qual — não conserte sozinho.

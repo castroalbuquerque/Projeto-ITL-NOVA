@@ -129,3 +129,21 @@ describe('limite de mensagens', () => {
     expect(rosa.regrasBloqueadas.map((b) => b.id)).toEqual(['B0']);
   });
 });
+
+// p.4: o convite de retorno se apoia no que mudou na linha do passageiro
+describe('win-back', () => {
+  it('convida com o que mudou na linha, e não alcança quem não autorizou', () => {
+    const jorge = por(decidir({ tipo: 'winback', passageiroId: 'p-07' }, null, PASSAGEIROS), 'p-07');
+    expect(jorge.enviar).toBe(true);
+    expect(jorge.chaveMensagem).toBe('winback:reconquista');
+    expect(jorge.compensacoes.map((c) => c.tipo)).toEqual(['oferta dirigida de 25%']);
+    expect(passageiroPorId('p-07').linhaHabitual).toBe('Capital–Interior');
+
+    // Carlos tem ocorrência aberta, mas o convite é comercial e ele não autorizou:
+    // o B1 o barra antes de qualquer escolha de tom.
+    const carlos = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
+    expect(carlos.enviar).toBe(false);
+    expect(carlos.chaveMensagem).toBeUndefined();
+    expect(carlos.regrasBloqueadas.map((b) => b.id)).toEqual(['B1']);
+  });
+});

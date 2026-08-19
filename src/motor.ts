@@ -2,6 +2,7 @@
 // não conhece a interface. Se precisar de um componente para rodar, está errado.
 
 import {
+  NOVIDADES_POR_LINHA,
   type Canal,
   type FaixaDeFundo,
   type Passageiro,
@@ -191,9 +192,16 @@ export const REGRAS: Regra[] = [
     tom: 'reconquista',
     aplica: ({ gatilho: g, passageiro: p }) =>
       g.tipo === 'winback' && p.diasDesdeUltimaViagem > DIAS_PARA_WINBACK && p.viagens24m > 0,
-    compensacoes: ({ viagem }) => [
-      { tipo: 'oferta dirigida de 25%', valorEstimado: credito(viagem, 0.25), foraDoTeto: false },
-    ],
+    compensacoes: ({ viagem, passageiro: p }) =>
+      p.ocorrenciasAbertas > 0
+        ? [] // caso aberto primeiro; convite comercial só depois que ele fechar
+        : [
+            {
+              tipo: 'oferta dirigida de 25%',
+              valorEstimado: credito(viagem, 0.25),
+              foraDoTeto: false,
+            },
+          ],
   },
   {
     id: 'R7',
@@ -236,15 +244,21 @@ export const REGRAS: Regra[] = [
  * que é o tom que reconhece a falha anterior. É o que separa a mensagem da
  * Mariana da mensagem do Carlos na mesma quebra.
  */
-function tomFinal(tomDaRegra: Tom, p: Passageiro): Tom {
+function tomFinal(tomDaRegra: Tom, p: Passageiro, g: Gatilho): Tom {
+  // Win-back: quem sumiu logo depois de uma falha recebe desculpa antes de oferta,
+  // e nunca as duas na mesma mensagem. Trocar os dois estraga a mensagem.
+  if (g.tipo === 'winback') return p.ocorrenciasAbertas > 0 ? 'reparador' : 'reconquista';
   return p.ocorrenciasAbertas > 0 && tomDaRegra === 'reparador' ? 'reconquista' : tomDaRegra;
 }
 
-function chaveDeMensagem(g: Gatilho, tom: Tom): string | undefined {
+function chaveDeMensagem(g: Gatilho, tom: Tom, p: Passageiro): string | undefined {
   if (g.tipo === 'ocorrencia') return `${g.ocorrencia}:${tom}`;
   if (g.tipo === 'marco') return 'marco:informativo';
-  if (g.tipo === 'winback') return `winback:${tom === 'reparador' ? 'reparador' : 'reconquista'}`;
-  return undefined;
+  if (g.tipo !== 'winback') return undefined;
+  if (tom === 'reparador') return 'winback:reparador';
+  // Sem saber o que mudou na linha dele, o convite não tem motivo concreto a dar.
+  const novidade = p.linhaHabitual ? NOVIDADES_POR_LINHA[p.linhaHabitual] : undefined;
+  return novidade ? 'winback:reconquista' : 'winback:reconquista_sem_novidade';
 }
 
 function acoesDeTerminal(g: Gatilho): string[] {
@@ -345,9 +359,9 @@ function avaliarPassageiro(ctx: Contexto, historico: Historico): Decisao {
       jaEnviadas += regra.canais.length;
       d.custoDisparo += regra.canais.length * CUSTO_POR_MENSAGEM;
       if (regra.tom) {
-        const tom = tomFinal(regra.tom, p);
+        const tom = tomFinal(regra.tom, p, gatilho);
         d.tom = tom;
-        d.chaveMensagem = chaveDeMensagem(gatilho, tom);
+        d.chaveMensagem = chaveDeMensagem(gatilho, tom, p);
       }
       if (regra.atrasoEnvioMinutos !== null) {
         d.atrasoEnvioMinutos =
