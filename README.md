@@ -11,13 +11,30 @@ evidência.
 
 ```bash
 npm install
-npm run dev     # interface em http://localhost:5173
-npm test        # 7 asserções sobre o motor
-npm run build   # typecheck e build de produção
+npm run dev            # interface em http://localhost:5173
+npm test               # 19 asserções: motor, ordem de corte e validador de fatos
+npm run build          # typecheck e build de produção
+npm run gerar:conteudo # reescreve o registro de conteudo-v2/ a partir de src/dadosV2.ts
 ```
 
 Sem backend, sem `.env`, sem chamada a API em runtime, sem biblioteca de componentes, sem router.
 Estado em `useState` no `App.tsx`. Nada é persistido: recarregar a página zera tudo.
+
+A v2 acrescenta três funcionalidades de IA agêntica sem mudar nada disso: as saídas de IA são
+pré-computadas, embutidas como constantes em `src/dadosV2.ts`, e o protótipo continua sem nenhuma
+chamada de modelo em tempo de execução. Ver `SPEC-central-transparencia-v2.md`.
+
+### O que a v2 acrescenta
+
+| # | Funcionalidade | Onde está na tela |
+|---|---|---|
+| F1 | Agente redator de mensagens | toggle "quem escreve" no topo da conversa, e o bloco *Redação* no canhoto |
+| F2 | Copiloto da ouvidoria ativa | botão *Abrir no copiloto*, na fila de casos |
+| F3 | Orquestrador de ocorrência | *Painel do lote*, na coluna da esquerda |
+
+O agente redige, monta e prepara; o livro de regras continua decidindo valor, elegibilidade e
+envio. Toda ação de agente passa por aprovação humana visível: o toggle, os três botões do
+copiloto e o *Aprovar lote*.
 
 ## O que é real e o que é simulado
 
@@ -45,16 +62,27 @@ canal de compra (67% e 27%) saíram da base inventada do exercício.
 
 ```
 src/
-  dados.ts        tipos, 12 passageiros, 3 viagens, banco de 29 mensagens
-  motor.ts        10 regras como array de objetos, decidir(), bloqueios, custos
-  motor.test.ts   8 asserções
-  App.tsx         três colunas e todo o estado
+  dados.ts          tipos, 12 passageiros, 3 viagens, banco de 29 mensagens
+  dadosV2.ts        v2: fatos travados, redações de IA, dossiê, painel do lote, prompts
+  motor.ts          10 regras como array de objetos, decidir(), bloqueios, custos, ordemDeCorte()
+  validador.ts      v2: confere a redação de IA contra os fatos travados
+  redacao.ts        v2: decide se a mensagem exibida vem do template ou do agente
+  motor.test.ts     10 asserções
+  validador.test.ts 9 asserções
+  App.tsx           três colunas e todo o estado
   ui/
-    Conversa.tsx  bolhas, horários, ações de terminal, substituição de placeholders
-    Inspetor.tsx  o canhoto: regras aplicadas, bloqueadas e o motivo de cada bloqueio
-    Metricas.tsx  cobertura, custo, bloqueios por motivo, quem ficou sem aviso
-    PosViagem.tsx pesquisa de nota 0–10 e fila de casos
-    Etiqueta.tsx  etiqueta de grupo, com marcador apagado para quem está fora dos conjuntos
+    Conversa.tsx    bolhas, horários, ações de terminal, substituição de placeholders
+    Inspetor.tsx    o canhoto: regras aplicadas, bloqueadas, motivo de cada bloqueio e a redação
+    Metricas.tsx    cobertura, custo, bloqueios por motivo, quem ficou sem aviso
+    PosViagem.tsx   pesquisa de nota 0–10 e fila de casos
+    Etiqueta.tsx    etiqueta de grupo, com marcador apagado para quem está fora dos conjuntos
+    Streaming.tsx   v2: streaming simulado, 40 a 60 ms por palavra, sobre texto estático
+    Copiloto.tsx    v2: dossiê, proposta e os botões aprovar / editar / recusar
+    Lote.tsx        v2: painel do lote, aprovação e a variação com estouro de teto
+    Honestidade.tsx v2: o quadro "o que é real e o que é simulado"
+scripts/
+  gerar_conteudo_v2.ts   monta prompt e pacote de fatos; a chamada de modelo é manual
+conteudo-v2/             prompt, fatos, saída bruta e saída aprovada, versionados
 ```
 
 ### As regras
@@ -125,6 +153,27 @@ mensagem sai, autorização decide só se pode haver mensagem comercial. Os dois
    e dê nota 4 ao Carlos. O caso entra na fila com prioridade elevada e prazo de 24 h, porque ele já
    tinha ocorrência aberta. A mesma nota para Mariana entra com 72 h.
 
+## Roteiro de demo da v2, 3 minutos
+
+1. **F1, o contraste numa tela** (~60 s). Na Capital–Interior, dispare *Quebra de veículo* e
+   deixe o topo da conversa em *Template (v1)*: são os textos escritos à mão. Troque para
+   *Redação por IA (v2)*: os mesmos Mariana e Carlos, agora com o texto do agente entrando palavra
+   a palavra. Clique em cada um e leia o bloco *Redação* no canhoto — `Fatos validados: horário ✓ ·
+   valor ✓ · nome ✓ · canal ✓`.
+2. **F1, o descarte** (~30 s). Ainda em modo IA, desça até o Diego: a redação sai com 07h05, o
+   validador a barra antes de qualquer exibição como enviada, ela aparece riscada e o template da
+   v1 é enviado no lugar. O canhoto registra o motivo. É a cena que separa personalização bonita
+   de personalização controlada.
+3. **F2, o caso do Carlos** (~60 s). Na fila de casos, clique em *Abrir no copiloto*: dossiê
+   montado, proposta em streaming e a nota de guardrail explicando por que a oferta de retorno
+   ficou de fora. Clique em *Editar*, troque uma palavra, clique em *Aprovar texto editado*. Nada
+   sai sem esse clique.
+4. **F3, o lote** (~30 s). Em *Orquestrador (v2)*, abra o *Painel do lote*: 42 afetados, 31 com
+   mensagem pronta, 11 pelo terminal, 1 barrada pelo freio, 1 redação descartada, R$ 1.840 contra
+   um teto de R$ 2.000. Clique em *Aprovar lote* e olhe a coluna da direita: a tela "Os números da
+   ocorrência" da v1 está preenchida com os mesmos números. *Ver variação com estouro de teto*
+   mostra a ordem de corte, aplicada pelo motor.
+
 ## Hipóteses não validadas
 
 1. Comunicação proativa reduzir evasão é **hipótese**, não resultado. Boa parte do churn em
@@ -164,6 +213,18 @@ apareceram ao programar, e que precisam entrar na próxima versão dele:
 - **Página 3, a instrução ao guichê.** A mesma página mostra "depositar o crédito de 15%" barrado
   para a Rosa, então a instrução ao guichê não pode prometer crédito a quem não o recebe. Ela agora
   manda recolher um telefone para o próximo aviso, que é a recomendação da própria página.
+- **O pacote de fatos do Carlos, na v2.** A seção 3.3 da spec v2 trava, para a mensagem dele numa
+  quebra, "reembolso integral + remarcação sem taxa + ligação de atendente". A R2 do motor não
+  prevê reembolso em quebra — reembolso é compensação de cancelamento, e é a mesma divergência já
+  anotada aqui sobre o cartão do Carlos na página 1 do relatório. Os fatos travados de
+  `src/dadosV2.ts` seguem a spec v2, e não o motor, para que o texto aprovado da spec passe pelo
+  validador. Se a decisão for o contrário, muda uma constante (`PACOTES_DE_FATOS['p-02']`) e o
+  texto precisa ser regerado.
+- **O limite de 4 frases.** A seção 3.4 o coloca como instrução do prompt e a 3.1 manda o validador
+  conferir fatos travados; o texto aprovado do Carlos, na própria spec, tem 5 frases. O validador
+  registra o excesso no canhoto sem descartar a redação.
+- **Diego na viagem da quebra.** A cena obrigatória da seção 3.3 é dele, numa ocorrência em que a
+  v1 não o colocava. Ele passa a viajar também na v-01.
 - **A régua de quatro avisos da página 1** (duas horas antes, na saída, na estrada, na chegada) não
   foi implementada: só existe a mensagem de pré-embarque, porque a lista de gatilhos da interface
   não inclui os outros três momentos.
