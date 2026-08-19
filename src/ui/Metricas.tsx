@@ -4,6 +4,7 @@ const NOME_DO_BLOQUEIO: Record<string, string> = {
   B0: 'sem contato (alcance)',
   B1: 'sem autorização',
   B2: 'limite de 3 avisos',
+  B4: 'caso aberto',
   B3: 'teto da ocorrência',
 };
 

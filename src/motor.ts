@@ -192,16 +192,22 @@ export const REGRAS: Regra[] = [
     tom: 'reconquista',
     aplica: ({ gatilho: g, passageiro: p }) =>
       g.tipo === 'winback' && p.diasDesdeUltimaViagem > DIAS_PARA_WINBACK && p.viagens24m > 0,
-    compensacoes: ({ viagem, passageiro: p }) =>
-      p.ocorrenciasAbertas > 0
-        ? [] // caso aberto primeiro; convite comercial só depois que ele fechar
-        : [
-            {
-              tipo: 'oferta dirigida de 25%',
-              valorEstimado: credito(viagem, 0.25),
-              foraDoTeto: false,
-            },
-          ],
+    compensacoes: ({ viagem }) => [
+      { tipo: 'oferta dirigida de 25%', valorEstimado: credito(viagem, 0.25), foraDoTeto: false },
+    ],
+  },
+  {
+    id: 'R6b',
+    descricao: 'Win-back de quem sumiu depois de uma falha: resolver o caso aberto',
+    comercial: false, // resolver o caso de quem pagou é atendimento, não propaganda
+    canais: ['whatsapp'],
+    atrasoEnvioMinutos: null,
+    tom: 'reparador',
+    aplica: ({ gatilho: g, passageiro: p }) =>
+      g.tipo === 'winback' &&
+      p.diasDesdeUltimaViagem > DIAS_PARA_WINBACK &&
+      p.ocorrenciasAbertas > 0,
+    compensacoes: () => [], // primeiro resolve; oferta só depois que o caso fechar
   },
   {
     id: 'R7',
@@ -245,9 +251,10 @@ export const REGRAS: Regra[] = [
  * Mariana da mensagem do Carlos na mesma quebra.
  */
 function tomFinal(tomDaRegra: Tom, p: Passageiro, g: Gatilho): Tom {
-  // Win-back: quem sumiu logo depois de uma falha recebe desculpa antes de oferta,
-  // e nunca as duas na mesma mensagem. Trocar os dois estraga a mensagem.
-  if (g.tipo === 'winback') return p.ocorrenciasAbertas > 0 ? 'reparador' : 'reconquista';
+  // Só numa ocorrência o tom sobe para reconquista: é ali que a mensagem precisa
+  // reconhecer a falha anterior antes de falar da falha de agora. Fora disso, cada
+  // regra já nasce com o tom certo.
+  if (g.tipo !== 'ocorrencia') return tomDaRegra;
   return p.ocorrenciasAbertas > 0 && tomDaRegra === 'reparador' ? 'reconquista' : tomDaRegra;
 }
 
@@ -319,6 +326,15 @@ function avaliarPassageiro(ctx: Contexto, historico: Historico): Decisao {
       bloqueios.push({
         id: 'B1',
         motivo: `${regra.id}: sem autorização para mensagem comercial`,
+      });
+    }
+
+    // B4 · caso aberto. Convite comercial só depois de resolver o que ficou em
+    // aberto. O número é identidade, não posição: ele corre logo depois do B1.
+    if (regra.comercial && p.ocorrenciasAbertas > 0) {
+      bloqueios.push({
+        id: 'B4',
+        motivo: `${regra.id}: há caso aberto, convite comercial só depois de resolvê-lo`,
       });
     }
 

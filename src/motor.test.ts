@@ -53,12 +53,16 @@ describe('motor de regras', () => {
     expect(carlos.regrasAplicadas).toContain('R2');
     expect(carlos.tom).toBe('reconquista'); // reconhece a ocorrência anterior
 
-    const convite = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
-    expect(convite.enviar).toBe(false);
-    expect(convite.regrasBloqueadas).toContainEqual({
+    const winback = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
+    expect(winback.regrasAplicadas).not.toContain('R6'); // o convite comercial não sai
+    expect(winback.regrasBloqueadas).toContainEqual({
       id: 'B1',
       motivo: 'R6: sem autorização para mensagem comercial',
     });
+    // mas resolver o caso aberto dele é atendimento, e passa sem autorização
+    expect(winback.regrasAplicadas).toContain('R6b');
+    expect(winback.chaveMensagem).toBe('winback:reparador');
+    expect(winback.compensacoes).toHaveLength(0);
   });
 
   it('teto degrada só o benefício extra, começando pelo menos frequente', () => {
@@ -139,11 +143,16 @@ describe('win-back', () => {
     expect(jorge.compensacoes.map((c) => c.tipo)).toEqual(['oferta dirigida de 25%']);
     expect(passageiroPorId('p-07').linhaHabitual).toBe('Capital–Interior');
 
-    // Carlos tem ocorrência aberta, mas o convite é comercial e ele não autorizou:
-    // o B1 o barra antes de qualquer escolha de tom.
+    // Helena autorizou e tem caso aberto: a desculpa sai, e só o convite espera.
+    // É o único passageiro em que o caso aberto aparece sozinho como motivo.
+    const helena = por(decidir({ tipo: 'winback', passageiroId: 'p-12' }, null, PASSAGEIROS), 'p-12');
+    expect(helena.enviar).toBe(true);
+    expect(helena.chaveMensagem).toBe('winback:reparador');
+    expect(helena.compensacoes).toHaveLength(0);
+    expect(helena.regrasBloqueadas.map((b) => b.id)).toEqual(['B4']);
+
+    // Carlos, sem autorização, acumula os dois motivos para o mesmo convite.
     const carlos = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
-    expect(carlos.enviar).toBe(false);
-    expect(carlos.chaveMensagem).toBeUndefined();
-    expect(carlos.regrasBloqueadas.map((b) => b.id)).toEqual(['B1']);
+    expect(carlos.regrasBloqueadas.map((b) => b.id)).toEqual(['B1', 'B4']);
   });
 });

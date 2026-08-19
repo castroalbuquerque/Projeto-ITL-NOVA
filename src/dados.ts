@@ -273,6 +273,27 @@ export const PASSAGEIROS: Passageiro[] = [
     gastoEmAlta: false,
     linhaHabitual: 'Capital–Interior',
   },
+  {
+    // Sumiu depois de uma falha, como o Carlos, mas com autorização dada.
+    // É ela que mostra o convite comercial sendo adiado — e não barrado — pelo
+    // caso aberto: o Carlos tem os dois impedimentos ao mesmo tempo e não separa um
+    // do outro. A viagem dela foi cancelada sem realocação e o caso nunca fechou.
+    id: 'p-12',
+    nome: 'Helena',
+    idade: 52,
+    grupo: 5,
+    grupoRotulo: ROTULOS_DE_GRUPO[5],
+    viagens24m: 4,
+    viagens4m: 0,
+    diasDesdeUltimaViagem: 150,
+    compraEm: 'aplicativo',
+    temContato: true,
+    consentimentoMarketing: true,
+    ocorrenciasAbertas: 1,
+    passagensNaoUsadas: 0,
+    gastoEmAlta: false,
+    linhaHabitual: 'Capital–Sul',
+  },
 ];
 
 /**

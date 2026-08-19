@@ -16,8 +16,8 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 
 ## Página 1 — a mesma falha, duas respostas
 
-1. **Os freios passaram de três para quatro.** O bloco "OS TRÊS FREIOS DO SISTEMA" vira "OS
-   QUATRO FREIOS DO SISTEMA", e o novo entra **em primeiro lugar**, antes de permissão:
+1. **Os freios passaram de três para cinco.** O bloco "OS TRÊS FREIOS DO SISTEMA" vira "OS
+   CINCO FREIOS DO SISTEMA". O primeiro dos novos entra **antes de todos**, na frente de permissão:
 
    > **CAMINHO ATÉ A PESSOA.** Antes de perguntar qualquer outra coisa, o sistema pergunta se
    > existe por onde chegar até o passageiro. Sem contato cadastrado nenhuma mensagem sai — nem
@@ -26,6 +26,13 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 
    Este é o freio que mais aparece no protótipo e o que a página 3 inteira discute. Ele estar
    ausente da lista de freios era a maior incoerência do relatório.
+
+   O segundo entra **logo depois de permissão**:
+
+   > **CASO ABERTO.** Quem tem uma reclamação sem solução não recebe convite comercial nenhum
+   > enquanto ela não for resolvida. A mensagem que reconhece a falha e chama o atendente continua
+   > saindo — essa é atendimento, não propaganda, e não depende de o cliente ter autorizado
+   > receber ofertas. O que espera é a oferta, nunca o atendimento.
 
 2. **O cartão da Mariana ganha a ligação.** Hoje ele lista três decisões e nenhuma é ligação. A
    regra de quebra manda somar ligação de atendente para os grupos 1 e 2, e ela é do grupo 1.
@@ -141,20 +148,39 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
     > às 19h, com poltrona que reclina mais. Se quiser experimentar, a próxima viagem sai com 25% de
     > desconto até domingo."
 
-15. **O caminho "sumiu logo depois de uma falha" existe no fluxograma e não tem por onde acontecer.**
-    A página descreve três caminhos para a lista mensal, e o terceiro — quem sumiu depois de uma
-    falha recebe desculpa antes de oferta — nunca dispara. O único passageiro com ocorrência aberta
-    é o Carlos, e ele não autorizou receber ofertas, então o freio da autorização barra o convite
-    antes de qualquer escolha de tom. O caminho está desenhado e vazio.
+15. **O caminho "sumiu logo depois de uma falha" ganhou uma personagem e uma regra.** Quando escrevi
+    este prompt, o terceiro caminho da página — quem sumiu depois de uma falha recebe desculpa antes
+    de oferta — estava desenhado e nunca disparava: o único passageiro com caso aberto era o Carlos,
+    e o freio da autorização barrava tudo antes. Isso foi resolvido com uma decisão de política:
+    **resolver o caso de quem pagou é atendimento, não propaganda**, e portanto não depende de
+    autorização comercial. A base legal é o contrato de transporte que falhou.
 
-    Isso não é erro de desenho: é uma pergunta que o material nunca respondeu. **Resolver o caso
-    aberto de alguém é propaganda ou é atendimento?** Se for atendimento, não deveria depender de
-    autorização comercial nenhuma — a base legal é o contrato de transporte que falhou, e a página
-    7 já diz que a política do grupo 5 é "atendimento caso a caso, um a um". Se for propaganda, o
-    caminho continua correto e simplesmente não se aplica a este elenco de onze pessoas.
+    A página passa a ter quatro respostas para a mesma revisão mensal, e vale mostrar as quatro,
+    porque juntas elas separam três perguntas que costumam andar embaralhadas:
 
-    Registre a pergunta na página, sem responder por conta própria: é decisão de quem responde pela
-    política de dados, não de quem desenha o relatório.
+    | Quem | O que recebe | O que fica retido, e por quê |
+    |---|---|---|
+    | Jorge | convite, com o que mudou na linha dele | nada |
+    | **Helena** (nova) | desculpa e ligação de atendente | o convite, só pelo caso aberto |
+    | Carlos | desculpa e ligação de atendente | o convite, pelo caso aberto e pela falta de autorização |
+    | Sandra | nada | tudo: não há caminho até ela nem autorização |
+
+    **Helena é nova e existe por um motivo:** ela autorizou receber ofertas e tem caso aberto, então
+    é a única em que o caso aberto aparece sozinho como motivo da retenção. No Carlos os dois
+    motivos se sobrepõem, e quem olha só o cartão dele conclui que é a falta de autorização que
+    segura o convite — quando na verdade nem resolver a autorização o liberaria. Acrescente-a à
+    página com este perfil: 52 anos, quatro viagens em dois anos, sumiu há cinco meses, compra pelo
+    aplicativo, autorizou receber ofertas, e a última viagem dela foi cancelada sem realocação, com
+    o caso aberto até hoje. Grupo 5 · Feridos pela Operação, como o Carlos.
+
+    O texto que ela e o Carlos recebem é este:
+
+    > "{Nome}, sua última viagem na {linha} terminou mal e o caso continua aberto do nosso lado.
+    > Antes de qualquer oferta queremos resolver isso: um atendente liga para você ainda hoje."
+
+    Repare que **não há oferta nenhuma na mensagem**, de propósito: desculpa e oferta na mesma
+    mensagem estragam as duas, que é o que a própria página já dizia em "Trocar os dois estraga a
+    mensagem".
 
 ## Página 5 — o grupo esquecido
 
@@ -174,9 +200,15 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 18. **A política do grupo 5** ganha o prazo que a regra nova define: "Desculpa com algo concreto e
     atendimento caso a caso, um a um, com ligação em até cinco minutos".
 
-19. **O quadro de duas perguntas** está correto e não muda. Ele foi o que mais se confirmou na
-    implementação: os onze passageiros caem exatamente nos quatro quadrantes descritos, e o Marcos
-    continua sendo o único caso em que autorização e alcance apontam para lados diferentes.
+19. **A tabela dos seis conjuntos** ganha a Helena: o grupo 5 passa a ter dois representantes,
+    "Carlos, Helena", e a nota de rodapé passa de sete para oito personagens cobrindo os seis
+    conjuntos. O elenco agora é de doze pessoas, não onze.
+
+20. **O quadro de duas perguntas** está correto e não muda. Ele foi o que mais se confirmou na
+    implementação: os doze passageiros caem exatamente nos quatro quadrantes descritos, e o Marcos
+    continua sendo o único caso em que autorização e alcance apontam para lados diferentes. A
+    Helena entra no quadrante "tudo pode" — e é justamente ela que mostra que **caber no quadrante
+    de cima à esquerda não basta**: o caso aberto retém o convite dela mesmo ali.
 
 ## Ao terminar
 

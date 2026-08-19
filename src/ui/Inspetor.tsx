@@ -7,6 +7,7 @@ const NOME_DO_BLOQUEIO: Record<string, string> = {
   B0: 'B0 · alcance',
   B1: 'B1 · autorização',
   B2: 'B2 · limite',
+  B4: 'B4 · caso aberto',
   B3: 'B3 · teto',
 };
 

@@ -25,7 +25,7 @@ Estado em `useState` no `App.tsx`. Nada é persistido: recarregar a página zera
 de verdade e podem ser conferidos passo a passo na coluna da direita. `decidir()` é uma função pura
 e roda sem nenhuma interface — os testes a exercitam sem montar um componente.
 
-**Simulado:** tudo o mais. Os 11 passageiros, as 3 viagens e as 28 mensagens foram escritos à mão
+**Simulado:** tudo o mais. Os 12 passageiros, as 3 viagens e as 29 mensagens foram escritos à mão
 para o exercício. Nenhuma mensagem é enviada. Não há localização por satélite, não há sistema de
 clientes, não há persistência. As duas proporções de alcance por canal de compra (67% e 27%) saíram
 da base inventada do exercício.
@@ -34,9 +34,9 @@ da base inventada do exercício.
 
 ```
 src/
-  dados.ts        tipos, 11 passageiros, 3 viagens, banco de 28 mensagens
-  motor.ts        9 regras como array de objetos, decidir(), bloqueios B0–B3, custos
-  motor.test.ts   7 asserções
+  dados.ts        tipos, 12 passageiros, 3 viagens, banco de 29 mensagens
+  motor.ts        10 regras como array de objetos, decidir(), bloqueios, custos
+  motor.test.ts   8 asserções
   App.tsx         três colunas e todo o estado
   ui/
     Conversa.tsx  bolhas, horários, ações de terminal, substituição de placeholders
@@ -57,6 +57,7 @@ src/
 | R4 | ocorrência | mudança de plataforma | whatsapp | imediato | informativo | nenhuma |
 | R5 | ocorrência | cancelamento | whatsapp | 1 min | reparador | reembolso + lugar em outro horário + crédito 20% |
 | R6 | win-back | sem viajar há > 120 dias | whatsapp | — | reconquista | oferta dirigida |
+| R6b | win-back | sem viajar há > 120 dias **e** caso aberto | whatsapp | — | reparador | nenhuma: primeiro resolve |
 | R7 | marco | 5 viagens em 4 meses **e** gasto em alta **e** grupo ≠ 1 | whatsapp | 24 h | informativo | subida de classe por 30 dias |
 | R8 | padrão | 3 passagens não usadas em 6 meses | **nenhum** | — | — | nenhuma |
 
@@ -70,6 +71,11 @@ investigação. Existe para provar que o motor sabe decidir não agir.
 - **B1 · autorização.** Sem consentimento, bloqueia só o que é comercial (R6 e R7). Aviso sobre a
   viagem comprada sempre passa.
 - **B2 · limite.** Máximo 3 mensagens por passageiro por viagem.
+- **B4 · caso aberto.** Convite comercial só depois de resolver o que ficou em aberto. Resolver o
+  caso de quem pagou é atendimento, não propaganda: a mensagem da regra 6b passa mesmo sem
+  autorização comercial, porque a base legal é o contrato de transporte que falhou. O que espera é
+  a oferta, não o atendimento. O número é identidade, não posição: este bloqueio corre logo depois
+  do B1.
 - **B3 · teto.** Benefício extra limitado a R$ 2.000 por ocorrência. Reembolso e lugar em outro
   horário ficam fora do teto — são direito de quem pagou. Ao estourar, corta o benefício extra
   começando pelo menos frequente, e registra cada corte com nome e valor.
@@ -96,8 +102,12 @@ mensagem sai, autorização decide só se pode haver mensagem comercial. Os dois
    convite de subida de classe, sem desconto e sem pedir nada em troca. Troque para Marcos, mesmo
    ritmo de viagem e autorização dada, e dispare de novo: B0. Ele é o caso que separa alcance de
    autorização; nos outros dez, as duas coisas andam juntas.
-5. **Win-back bloqueado: Sandra** (~25 s). Dispare *Win-back* para ela. Duas barras vermelhas no
-   canhoto: B0 e B1. Compare com Jorge, mesma ausência e mesmo grupo de origem, que recebe convite.
+5. **Win-back, quatro respostas** (~50 s). Dispare *Win-back* para os quatro que sumiram. Jorge
+   recebe o convite, ancorado no que mudou na linha que ele usava. Helena e Carlos recebem desculpa
+   e nenhuma oferta, porque cada um tem um caso aberto — e o convite deles fica retido, ela só pelo
+   caso (B4), ele pelo caso e pela falta de autorização (B1 e B4). Sandra não recebe nada: B0 e B1.
+   A mensagem de reparação alcança Carlos sem que ele tenha autorizado nada, e é esse o ponto:
+   resolver o caso de quem pagou é atendimento, não propaganda.
 6. **Padrão de não embarque: Wilson** (~25 s). Dispare *Padrão de não embarque*. R8 aplicada,
    nenhuma mensagem, registro interno de caso para investigação. É o motor decidindo não agir.
 7. **A ouvidoria** (~30 s). Volte à Capital–Interior, dispare a quebra, clique em *Concluir viagem*
