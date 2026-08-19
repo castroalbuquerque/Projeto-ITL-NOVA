@@ -350,3 +350,77 @@ export function conferenciaDeCadastro() {
     ocorrenciasAbertas: p.ocorrenciasAbertas,
   }));
 }
+
+// ---------------------------------------------------------------------------
+// Banco de mensagens. Escritas à mão para o exercício, nenhuma gerada em runtime.
+// Regra de redação: até 320 caracteres, sem emoji, sem pedido de desculpas
+// genérico, sempre com o próximo passo concreto e o horário revisado.
+// Placeholders: {nome} {linha} {horarioRevisado} {compensacao} {plataforma}
+// ---------------------------------------------------------------------------
+
+export const MENSAGENS: Record<string, string> = {
+  'atraso:informativo':
+    '{nome}, a saída da {linha} atrasou e passa para {horarioRevisado}. A plataforma segue a mesma e o embarque começa quinze minutos antes. Se o horário mudar de novo, avisamos por aqui.',
+  'atraso:atencioso':
+    '{nome}, a {linha} atrasou e a nova saída é {horarioRevisado}. Você pode esperar na praça de alimentação, avisamos quinze minutos antes do embarque. Se preferir outro horário, responda aqui e remarcamos sem taxa.',
+  'atraso:reparador':
+    '{nome}, a saída da {linha} atrasou e sai às {horarioRevisado}. Você pode esperar na praça de alimentação e avisamos quinze minutos antes do embarque. {compensacao}',
+  'atraso:reconquista':
+    '{nome}, a {linha} atrasou e a nova saída é {horarioRevisado}. Na sua última viagem conosco você ficou sem informação; desta vez o aviso saiu antes de você chegar ao terminal. {compensacao}',
+
+  'quebra:informativo':
+    '{nome}, o veículo da {linha} teve falha mecânica. A troca já foi acionada e a saída passa para {horarioRevisado}. Seu assento está garantido e o embarque é na mesma plataforma.',
+  'quebra:atencioso':
+    '{nome}, o veículo da {linha} teve falha mecânica e a saída passa para {horarioRevisado}. Seu assento continua reservado. Se esse horário não servir, responda aqui e colocamos você na próxima saída sem taxa.',
+  'quebra:reparador':
+    '{nome}, o veículo da {linha} teve falha mecânica. Já acionamos a troca e a saída passa para {horarioRevisado}. Seu assento está garantido e {compensacao}',
+  'quebra:reconquista':
+    '{nome}, houve falha mecânica no veículo da {linha} e a saída passa para {horarioRevisado}. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um atendente está com o seu caso e liga em cinco minutos. {compensacao}',
+
+  'mudanca_plataforma:informativo':
+    '{nome}, a {linha} mudou de plataforma e o embarque passa a ser na {plataforma}. O horário segue {horarioRevisado} e os painéis do terminal já estão atualizados.',
+  'mudanca_plataforma:atencioso':
+    '{nome}, a {linha} passou para a plataforma {plataforma} e a saída continua às {horarioRevisado}. Se estiver com bagagem despachada ou com dificuldade para se deslocar, procure o guichê e alguém acompanha você até lá.',
+  'mudanca_plataforma:reparador':
+    '{nome}, mudamos a {linha} para a plataforma {plataforma} e a saída segue às {horarioRevisado}. A mudança foi nossa e o aviso saiu no momento em que ela entrou no sistema. {compensacao}',
+  'mudanca_plataforma:reconquista':
+    '{nome}, a {linha} embarca hoje na plataforma {plataforma}, às {horarioRevisado}. Da última vez uma mudança dessas não chegou até você; agora chega. Qualquer nova alteração aparece aqui primeiro.',
+
+  'cancelamento:informativo':
+    '{nome}, a {linha} foi cancelada por falta de veículo. Seu lugar já está reservado na saída das {horarioRevisado} e o valor volta integral hoje.',
+  'cancelamento:atencioso':
+    '{nome}, a {linha} foi cancelada por falta de veículo. O valor volta integral hoje e há lugar na saída das {horarioRevisado}. Responda aqui e reservamos para você, sem taxa.',
+  'cancelamento:reparador':
+    '{nome}, a {linha} foi cancelada por falta de veículo. Seu lugar já está reservado na saída das {horarioRevisado} e o valor volta integral hoje. {compensacao}',
+  'cancelamento:reconquista':
+    '{nome}, a {linha} foi cancelada por falta de veículo. O valor volta integral hoje e seu lugar está garantido às {horarioRevisado}. Da última vez você soube de uma mudança só no terminal; este aviso saiu em um minuto. {compensacao}',
+
+  'preembarque:informativo':
+    '{nome}, sua viagem na {linha} sai às {horarioRevisado}, na plataforma {plataforma}. O embarque começa vinte minutos antes. Se alguma coisa mudar, avisamos por aqui antes de você sair de casa.',
+
+  'winback:reconquista':
+    '{nome}, faz tempo que você não viaja com a gente. A {linha} agora tem saída também às {horarioRevisado}, com poltrona que reclina mais. Se quiser experimentar, {compensacao}',
+  'winback:reparador':
+    '{nome}, sua última viagem na {linha} terminou mal e o caso continua aberto do nosso lado. Antes de qualquer oferta queremos resolver isso: um atendente liga hoje até {horarioRevisado}. {compensacao}',
+
+  'marco:informativo':
+    '{nome}, esta é a sua quinta viagem em quatro meses e a gente reparou. Na próxima, {compensacao} Vale até o fim do mês e é só escolher na hora de comprar.',
+
+  'painel:atraso':
+    '{linha} · plataforma {plataforma} · nova saída {horarioRevisado} · atraso confirmado',
+  'painel:quebra':
+    '{linha} · plataforma {plataforma} · nova saída {horarioRevisado} · troca de veículo em andamento',
+  'painel:mudanca_plataforma':
+    '{linha} · saída {horarioRevisado} · embarque agora na plataforma {plataforma}',
+  'painel:cancelamento':
+    '{linha} · viagem cancelada · realocação na saída das {horarioRevisado} · procure o guichê',
+
+  'guiche:atraso':
+    'Anunciar na plataforma {plataforma}: {linha} atrasada, nova saída {horarioRevisado}. Informar um a um os passageiros sem contato cadastrado e registrar no bilhete: {compensacao}',
+  'guiche:quebra':
+    'Anunciar na plataforma {plataforma}: falha mecânica na {linha}, veículo substituto às {horarioRevisado}. Confirmar o assento de quem já está no terminal e registrar no bilhete: {compensacao}',
+  'guiche:mudanca_plataforma':
+    'Anunciar: {linha} muda para a plataforma {plataforma}, saída mantida às {horarioRevisado}. Acompanhar até a nova plataforma quem estiver com bagagem despachada.',
+  'guiche:cancelamento':
+    'Anunciar: {linha} cancelada. Realocar na saída das {horarioRevisado}, iniciar a devolução integral no guichê e registrar quem não puder esperar: {compensacao}',
+};
