@@ -1,0 +1,80 @@
+{
+  "p-01": {
+    "id": "fatos-mariana-quebra",
+    "passageiroId": "p-01",
+    "nome": "Mariana",
+    "segmento": "Grupo 1 · Clientes Âncora",
+    "tipoDeFalha": "falha mecânica no veículo",
+    "horarioPartida": "06h30",
+    "horarioRevisado": "07h15",
+    "compensacoes": [
+      {
+        "rotulo": "crédito de 30%",
+        "termos": [
+          "30%"
+        ]
+      },
+      {
+        "rotulo": "assento garantido",
+        "termos": [
+          "assento"
+        ]
+      }
+    ],
+    "canal": "whatsapp",
+    "ofertaComercialLiberada": true,
+    "maximoDeFrases": 4
+  },
+  "p-02": {
+    "id": "fatos-carlos-quebra",
+    "passageiroId": "p-02",
+    "nome": "Carlos",
+    "segmento": "Grupo 5 · Feridos pela Operação",
+    "tipoDeFalha": "falha mecânica no veículo",
+    "horarioPartida": "06h30",
+    "horarioRevisado": "07h15",
+    "compensacoes": [
+      {
+        "rotulo": "reembolso integral",
+        "termos": [
+          "reembolso"
+        ]
+      },
+      {
+        "rotulo": "remarcação sem taxa",
+        "termos": [
+          "sem taxa"
+        ]
+      },
+      {
+        "rotulo": "ligação de atendente",
+        "termos": [
+          "atendente"
+        ]
+      }
+    ],
+    "canal": "whatsapp",
+    "ofertaComercialLiberada": false,
+    "maximoDeFrases": 4
+  },
+  "p-05": {
+    "id": "fatos-diego-quebra",
+    "passageiroId": "p-05",
+    "nome": "Diego",
+    "segmento": "fora dos conjuntos",
+    "tipoDeFalha": "falha mecânica no veículo",
+    "horarioPartida": "06h30",
+    "horarioRevisado": "07h15",
+    "compensacoes": [
+      {
+        "rotulo": "crédito de 30%",
+        "termos": [
+          "30%"
+        ]
+      }
+    ],
+    "canal": "whatsapp",
+    "ofertaComercialLiberada": false,
+    "maximoDeFrases": 4
+  }
+}
