@@ -320,7 +320,9 @@ export const VIAGENS: Viagem[] = [
     plataforma: '07',
     noturna: false,
     valorPassagem: 155,
-    passageiroIds: ['p-01', 'p-02'],
+    // Diego entra aqui na v2: é a viagem da cena de falha do guardrail (spec v2,
+    // seção 3.3), em que a redação de IA erra o horário e cai para o template.
+    passageiroIds: ['p-01', 'p-02', 'p-05'],
     cargaDeFundo: [],
   },
   {

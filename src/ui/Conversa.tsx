@@ -1,6 +1,9 @@
 import { MENSAGENS, NOVIDADES_POR_LINHA, passageiroPorId, type Viagem } from '../dados';
+import { motivoDeDescarte } from '../dadosV2';
 import { REGRAS, type Compensacao, type Decisao, type Gatilho } from '../motor';
+import { resolverRedacao } from '../redacao';
 import { Etiqueta } from './Etiqueta';
+import { TextoEmStreaming } from './Streaming';
 
 // --- horários ---------------------------------------------------------------
 
@@ -104,10 +107,13 @@ export function Conversa({
   eventos,
   selecionadoId,
   aoSelecionar,
+  modoIA = false,
 }: {
   eventos: Evento[];
   selecionadoId: string | null;
   aoSelecionar: (id: string) => void;
+  /** Ligado, o texto vem do agente redator; desligado, do template da v1. */
+  modoIA?: boolean;
 }) {
   if (eventos.length === 0) {
     return (
@@ -137,6 +143,7 @@ export function Conversa({
                 key={d.passageiroId}
                 d={d}
                 e={e}
+                modoIA={modoIA}
                 selecionado={d.passageiroId === selecionadoId}
                 aoSelecionar={aoSelecionar}
               />
@@ -151,11 +158,13 @@ export function Conversa({
 function Bloco({
   d,
   e,
+  modoIA,
   selecionado,
   aoSelecionar,
 }: {
   d: Decisao;
   e: Evento;
+  modoIA: boolean;
   selecionado: boolean;
   aoSelecionar: (id: string) => void;
 }) {
@@ -182,18 +191,62 @@ function Bloco({
           r.atrasoEnvioMinutos ?? 0,
         );
         const ligacao = r.canais.includes('ligacao');
+        const textoTemplate = d.chaveMensagem
+          ? renderizar(d.chaveMensagem, d, e.gatilho, e.viagem)
+          : '—';
+        const redacao = resolverRedacao({
+          modoIA,
+          gatilho: e.gatilho,
+          passageiroId: d.passageiroId,
+          canal: r.canais[0],
+          textoTemplate,
+        });
         return (
           <div key={r.id} className="mb-2 last:mb-0">
+            {/* Redação reprovada pelo validador: aparece riscada, e nunca como enviada. */}
+            {redacao.descartada && (
+              <div className="mb-1 max-w-prose rounded-lg border border-dashed border-slate-300 bg-slate-100 px-3 py-2">
+                <TextoEmStreaming
+                  texto={redacao.descartada.texto}
+                  ativo={modoIA}
+                  rotulo="redação por IA · não foi enviada"
+                  className="text-sm text-slate-400 line-through"
+                />
+                <div className="mt-1.5 border-l-2 border-red-400 pl-2 text-xs text-red-700">
+                  {motivoDeDescarte(redacao.descartada.motivo)}
+                </div>
+              </div>
+            )}
+
             <div className="max-w-prose rounded-lg rounded-tl-none bg-emerald-50 px-3 py-2 text-sm text-slate-800">
-              {ligacao
-                ? 'Ligação de um atendente sobre esta viagem, com o caso já aberto na tela dele.'
-                : d.chaveMensagem
-                  ? renderizar(d.chaveMensagem, d, e.gatilho, e.viagem)
-                  : '—'}
+              {ligacao ? (
+                'Ligação de um atendente sobre esta viagem, com o caso já aberto na tela dele.'
+              ) : redacao.origem === 'ia' ? (
+                <TextoEmStreaming texto={redacao.texto} ativo={modoIA} />
+              ) : (
+                redacao.texto
+              )}
             </div>
-            <div className="mt-1 text-xs text-slate-400">
-              {hora(horario)} · {r.canais.join(', ')} · {r.id}
-              {r.atrasoEnvioMinutos ? ` · ${r.atrasoEnvioMinutos} min após a ocorrência` : ''}
+            <div className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-slate-400">
+              <span>
+                {hora(horario)} · {r.canais.join(', ')} · {r.id}
+                {r.atrasoEnvioMinutos ? ` · ${r.atrasoEnvioMinutos} min após a ocorrência` : ''}
+              </span>
+              {!ligacao && redacao.disponivel && (
+                <span
+                  className={
+                    redacao.origem === 'ia'
+                      ? 'rounded bg-violet-100 px-1.5 py-0.5 text-violet-700'
+                      : 'rounded bg-slate-100 px-1.5 py-0.5 text-slate-500'
+                  }
+                >
+                  {redacao.origem === 'ia'
+                    ? 'redação por IA'
+                    : redacao.descartada
+                      ? 'template padrão, após descarte'
+                      : 'template da v1'}
+                </span>
+              )}
             </div>
           </div>
         );

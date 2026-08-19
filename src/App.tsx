@@ -26,6 +26,7 @@ export default function App() {
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const [alvoId, setAlvoId] = useState<string>('p-09');
   const [concluidas, setConcluidas] = useState<string[]>([]);
+  const [modoIA, setModoIA] = useState(false);
   const [notas, setNotas] = useState<Record<string, number>>({});
 
   const viagem = VIAGENS.find((v) => v.id === viagemId)!;
@@ -205,10 +206,12 @@ export default function App() {
 
         {/* ---------- conversa ---------- */}
         <main className="min-h-0 overflow-y-auto bg-slate-50">
+          <SeletorDeRedacao modoIA={modoIA} aoTrocar={setModoIA} />
           <Conversa
             eventos={eventos}
             selecionadoId={selecionadoId}
             aoSelecionar={setSelecionadoId}
+            modoIA={modoIA}
           />
           {concluidas.map((id) => {
             const v = VIAGENS.find((x) => x.id === id)!;
@@ -239,12 +242,55 @@ export default function App() {
             )}
           </div>
           <div className="min-h-0 flex-1">
-            <Inspetor eventos={eventos} selecionadoId={selecionadoId} />
+            <Inspetor eventos={eventos} selecionadoId={selecionadoId} modoIA={modoIA} />
           </div>
           {resumo && ultimo && <Metricas resumo={resumo} pessoas={ultimo.decisoes.length} />}
           <FilaDeCasos casos={casos} />
         </aside>
       </div>
+    </div>
+  );
+}
+
+/** Toggle da seção 3.2: a mesma ocorrência, escrita pelo template ou pelo agente. */
+function SeletorDeRedacao({
+  modoIA,
+  aoTrocar,
+}: {
+  modoIA: boolean;
+  aoTrocar: (v: boolean) => void;
+}) {
+  const opcoes = [
+    { ia: false, rotulo: 'Template (v1)' },
+    { ia: true, rotulo: 'Redação por IA (v2)' },
+  ];
+  return (
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white/95 px-4 py-2 backdrop-blur">
+      <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+        Quem escreve
+      </span>
+      <div className="flex overflow-hidden rounded border border-slate-300">
+        {opcoes.map((o) => (
+          <button
+            key={o.rotulo}
+            onClick={() => aoTrocar(o.ia)}
+            className={`px-2.5 py-1 text-xs ${
+              o.ia === modoIA
+                ? o.ia
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-slate-800 text-white'
+                : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {o.rotulo}
+          </button>
+        ))}
+      </div>
+      <span className="text-xs text-slate-400">
+        {modoIA
+          ? 'texto gerado por IA antes da apresentação e embutido aqui; o efeito de digitação é reproduzido'
+          : 'texto dos modelos escritos à mão na v1'}
+      </span>
     </div>
   );
 }
