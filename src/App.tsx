@@ -1,41 +1,217 @@
-import { PASSAGEIROS, VIAGENS, etiquetaDeGrupo, passageiroPorId } from './dados'
+import { useMemo, useState } from 'react';
+import { PASSAGEIROS, VIAGENS, passageiroPorId, type Viagem } from './dados';
+import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
+import { Conversa, rotuloDoGatilho, type Evento } from './ui/Conversa';
+import { Etiqueta } from './ui/Etiqueta';
+import { Inspetor } from './ui/Inspetor';
+import { Metricas } from './ui/Metricas';
 
-// Etapa 1 — só a conferência dos dados. A interface de três colunas é a Etapa 3.
-function App() {
+const OCORRENCIAS = [
+  { id: 'atraso', rotulo: 'Atraso longo', minutos: 80 },
+  { id: 'quebra', rotulo: 'Quebra de veículo', minutos: 45 },
+  { id: 'mudanca_plataforma', rotulo: 'Mudança de plataforma', minutos: 0 },
+  { id: 'cancelamento', rotulo: 'Cancelamento', minutos: 120 },
+] as const;
+
+const GATILHOS_DE_PESSOA = [
+  { tipo: 'winback', rotulo: 'Win-back' },
+  { tipo: 'marco', rotulo: 'Marco' },
+  { tipo: 'padrao', rotulo: 'Padrão de não embarque' },
+] as const;
+
+export default function App() {
+  const [viagemId, setViagemId] = useState<string>(VIAGENS[0].id);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
+  const [alvoId, setAlvoId] = useState<string>('p-09');
+
+  const viagem = VIAGENS.find((v) => v.id === viagemId)!;
+
+  /** Mensagens já enviadas por passageiro nesta viagem — é o que alimenta o B2. */
+  const historico = useMemo<Historico>(() => {
+    const h: Historico = {};
+    for (const e of eventos) {
+      if (e.viagem?.id !== viagemId) continue;
+      for (const d of e.decisoes) h[d.passageiroId] = (h[d.passageiroId] ?? 0) + d.canais.length;
+    }
+    return h;
+  }, [eventos, viagemId]);
+
+  function dispararOcorrencia(o: (typeof OCORRENCIAS)[number]) {
+    const gatilho: Gatilho = {
+      tipo: 'ocorrencia',
+      ocorrencia: o.id,
+      minutosImpacto: o.minutos,
+      viagemId,
+    };
+    const decisoes = decidir(gatilho, viagem, PASSAGEIROS, historico);
+    setEventos((atuais) => [...atuais, { gatilho, viagem, decisoes }]);
+    if (!selecionadoId) setSelecionadoId(decisoes[0]?.passageiroId ?? null);
+  }
+
+  function dispararPessoal(tipo: 'winback' | 'marco' | 'padrao') {
+    const p = passageiroPorId(alvoId);
+    const gatilho: Gatilho =
+      tipo === 'padrao'
+        ? { tipo, passageiroId: p.id, passagensNaoUsadas: p.passagensNaoUsadas }
+        : { tipo, passageiroId: p.id };
+    const decisoes = decidir(gatilho, null, PASSAGEIROS, {});
+    setEventos((atuais) => [...atuais, { gatilho, viagem: null, decisoes }]);
+    setSelecionadoId(p.id);
+  }
+
+  const ultimo = eventos[eventos.length - 1];
+  const resumo = ultimo
+    ? resumoDaOcorrencia(
+        ultimo.gatilho,
+        ultimo.viagem,
+        PASSAGEIROS,
+        ultimo.gatilho.tipo === 'ocorrencia' ? historicoAntesDe(eventos, ultimo, viagemId) : {},
+      )
+    : null;
+
   return (
-    <main className="mx-auto max-w-4xl p-8 font-sans text-slate-800">
-      <h1 className="text-2xl font-semibold">Central de Transparência</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Etapa 1 — {PASSAGEIROS.length} passageiros e {VIAGENS.length} viagens carregados.
-        Conferência completa no console.
-      </p>
+    <div className="flex h-screen flex-col bg-slate-100 text-slate-800">
+      <header className="flex items-baseline gap-3 border-b border-slate-300 bg-white px-4 py-2">
+        <h1 className="font-semibold">Central de Transparência</h1>
+        <span className="text-xs text-slate-500">
+          protótipo · dados inventados · nenhuma mensagem é enviada de fato
+        </span>
+      </header>
 
-      <ul className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
-        {PASSAGEIROS.map((p) => (
-          <li key={p.id} className="flex flex-wrap items-baseline gap-x-3 py-2">
-            <span className="w-28 font-medium">{p.nome}</span>
-            <span className="w-64 text-sm text-slate-500">{etiquetaDeGrupo(p)}</span>
-            <span className="text-sm">{p.temContato ? 'tem contato' : 'sem contato'}</span>
-            <span className="text-sm text-slate-500">
-              {p.consentimentoMarketing ? 'autorizou' : 'não autorizou'}
+      <div className="grid min-h-0 flex-1 grid-cols-[17rem_1fr_22rem]">
+        {/* ---------- seletor ---------- */}
+        <aside className="flex min-h-0 flex-col overflow-y-auto border-r border-slate-300 bg-white">
+          <section className="px-4 py-3">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Viagem
+            </h2>
+            <div className="space-y-1">
+              {VIAGENS.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setViagemId(v.id)}
+                  className={`w-full rounded border px-2 py-1.5 text-left text-xs ${
+                    v.id === viagemId
+                      ? 'border-slate-800 bg-slate-800 text-white'
+                      : 'border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  <div className="font-medium">{v.linha}</div>
+                  <div className={v.id === viagemId ? 'text-slate-300' : 'text-slate-500'}>
+                    {v.partida} · plataforma {v.plataforma} · {nomes(v)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="border-t border-slate-200 px-4 py-3">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Ocorrência na viagem
+            </h2>
+            <div className="space-y-1">
+              {OCORRENCIAS.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => dispararOcorrencia(o)}
+                  className="w-full rounded border border-slate-200 px-2 py-1.5 text-left text-xs hover:border-slate-800 hover:bg-slate-50"
+                >
+                  {o.rotulo}
+                  {o.minutos > 0 && <span className="text-slate-400"> · {o.minutos} min</span>}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="border-t border-slate-200 px-4 py-3">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Gatilho de pessoa
+            </h2>
+            <select
+              value={alvoId}
+              onChange={(e) => setAlvoId(e.target.value)}
+              className="mb-2 w-full rounded border border-slate-300 px-2 py-1 text-xs"
+            >
+              {PASSAGEIROS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome} — {p.grupo === null ? 'fora dos conjuntos' : `grupo ${p.grupo}`}
+                </option>
+              ))}
+            </select>
+            <div className="mb-2">
+              <Etiqueta p={passageiroPorId(alvoId)} />
+            </div>
+            <div className="space-y-1">
+              {GATILHOS_DE_PESSOA.map((g) => (
+                <button
+                  key={g.tipo}
+                  onClick={() => dispararPessoal(g.tipo)}
+                  className="w-full rounded border border-slate-200 px-2 py-1.5 text-left text-xs hover:border-slate-800 hover:bg-slate-50"
+                >
+                  {g.rotulo}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {eventos.length > 0 && (
+            <section className="border-t border-slate-200 px-4 py-3">
+              <button
+                onClick={() => {
+                  setEventos([]);
+                  setSelecionadoId(null);
+                }}
+                className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:border-slate-800"
+              >
+                Limpar os {eventos.length} gatilhos disparados
+              </button>
+            </section>
+          )}
+        </aside>
+
+        {/* ---------- conversa ---------- */}
+        <main className="min-h-0 overflow-y-auto bg-slate-50">
+          <Conversa
+            eventos={eventos}
+            selecionadoId={selecionadoId}
+            aoSelecionar={setSelecionadoId}
+          />
+        </main>
+
+        {/* ---------- inspetor e números ---------- */}
+        <aside className="flex min-h-0 flex-col overflow-y-auto border-l border-slate-300 bg-white">
+          <div className="border-b border-slate-200 px-4 py-2">
+            <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              O canhoto da decisão
             </span>
-          </li>
-        ))}
-      </ul>
-
-      <ul className="mt-6 space-y-1 text-sm text-slate-600">
-        {VIAGENS.map((v) => (
-          <li key={v.id}>
-            <span className="font-medium text-slate-800">{v.linha}</span> · {v.partida} ·
-            plataforma {v.plataforma} · R$ {v.valorPassagem} ·{' '}
-            {v.passageiroIds.map((id) => passageiroPorId(id).nome).join(', ')}
-            {v.cargaDeFundo.length > 0 &&
-              ` + ${v.cargaDeFundo.reduce((s, f) => s + f.pessoas, 0)} de fundo`}
-          </li>
-        ))}
-      </ul>
-    </main>
-  )
+            {ultimo && (
+              <span className="ml-2 text-xs text-slate-400">
+                último: {rotuloDoGatilho(ultimo.gatilho)}
+              </span>
+            )}
+          </div>
+          <div className="min-h-0 flex-1">
+            <Inspetor eventos={eventos} selecionadoId={selecionadoId} />
+          </div>
+          {resumo && ultimo && <Metricas resumo={resumo} pessoas={ultimo.decisoes.length} />}
+        </aside>
+      </div>
+    </div>
+  );
 }
 
-export default App
+function nomes(v: Viagem): string {
+  return v.passageiroIds.map((id) => passageiroPorId(id).nome).join(', ');
+}
+
+/** Histórico como estava antes do último evento, para o resumo não contar a si mesmo. */
+function historicoAntesDe(eventos: Evento[], ultimo: Evento, viagemId: string): Historico {
+  const h: Historico = {};
+  for (const e of eventos) {
+    if (e === ultimo) break;
+    if (e.viagem?.id !== viagemId) continue;
+    for (const d of e.decisoes) h[d.passageiroId] = (h[d.passageiroId] ?? 0) + d.canais.length;
+  }
+  return h;
+}

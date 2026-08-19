@@ -373,7 +373,7 @@ export const MENSAGENS: Record<string, string> = {
   'quebra:atencioso':
     '{nome}, o veículo da {linha} teve falha mecânica e a saída passa para {horarioRevisado}. Seu assento continua reservado. Se esse horário não servir, responda aqui e colocamos você na próxima saída sem taxa.',
   'quebra:reparador':
-    '{nome}, o veículo da {linha} teve falha mecânica. Já acionamos a troca e a saída passa para {horarioRevisado}. Seu assento está garantido e {compensacao}',
+    '{nome}, o veículo da {linha} teve falha mecânica. Já acionamos a troca e a saída passa para {horarioRevisado}. Seu assento está garantido. {compensacao}',
   'quebra:reconquista':
     '{nome}, houve falha mecânica no veículo da {linha} e a saída passa para {horarioRevisado}. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um atendente está com o seu caso e liga em cinco minutos. {compensacao}',
 
@@ -416,11 +416,11 @@ export const MENSAGENS: Record<string, string> = {
     '{linha} · viagem cancelada · realocação na saída das {horarioRevisado} · procure o guichê',
 
   'guiche:atraso':
-    'Anunciar na plataforma {plataforma}: {linha} atrasada, nova saída {horarioRevisado}. Informar um a um os passageiros sem contato cadastrado e registrar no bilhete: {compensacao}',
+    'Anunciar na plataforma {plataforma}: {linha} atrasada, nova saída {horarioRevisado}. Informar um a um os passageiros sem contato cadastrado e recolher um telefone para o próximo aviso.',
   'guiche:quebra':
-    'Anunciar na plataforma {plataforma}: falha mecânica na {linha}, veículo substituto às {horarioRevisado}. Confirmar o assento de quem já está no terminal e registrar no bilhete: {compensacao}',
+    'Anunciar na plataforma {plataforma}: falha mecânica na {linha}, veículo substituto às {horarioRevisado}. Confirmar o assento de quem já está no terminal e recolher um telefone para o próximo aviso.',
   'guiche:mudanca_plataforma':
     'Anunciar: {linha} muda para a plataforma {plataforma}, saída mantida às {horarioRevisado}. Acompanhar até a nova plataforma quem estiver com bagagem despachada.',
   'guiche:cancelamento':
-    'Anunciar: {linha} cancelada. Realocar na saída das {horarioRevisado}, iniciar a devolução integral no guichê e registrar quem não puder esperar: {compensacao}',
+    'Anunciar: {linha} cancelada. Realocar na saída das {horarioRevisado}, iniciar a devolução integral no guichê e anotar quem não puder esperar pelo próximo horário.',
 };
