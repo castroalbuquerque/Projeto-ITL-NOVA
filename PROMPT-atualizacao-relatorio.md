@@ -45,12 +45,12 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 
 5. **Os dois textos de mensagem passam a ser estes, literalmente:**
 
-   > **Mariana** — "Mariana, o veículo da Capital–Interior teve falha mecânica. Já acionamos a
-   > troca e a saída passa para 07h15. Seu assento está garantido. Um crédito de 30% entra na sua
+   > **Mariana** — "Mariana, o veículo das 06h30 na Capital–Interior teve falha mecânica. Já
+   > acionamos a troca e a saída passa para 07h15. Seu assento está garantido. Um crédito de 30% entra na sua
    > conta hoje e a remarcação fica livre, sem taxa."
 
-   > **Carlos** — "Carlos, houve falha mecânica no veículo da Capital–Interior e a saída passa
-   > para 07h15. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um
+   > **Carlos** — "Carlos, houve falha mecânica no veículo das 06h30 na Capital–Interior e a
+   > saída passa para 07h15. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um
    > atendente está com o seu caso e liga em cinco minutos. Um crédito de 30% entra na sua conta
    > hoje e a remarcação fica livre, sem taxa."
 
@@ -91,15 +91,15 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
     tom, não por perfil, e os três têm o mesmo tom — a diferença entre eles aparece na compensação,
     não na redação. Isso foi decidido: o relatório mostra o mesmo texto três vezes. Use estes:
 
-    > **Ana Paula** — "Ana Paula, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já
-    > está reservado na saída das 08h00 e o valor volta integral hoje. Um crédito de 20% fica na sua
+    > **Ana Paula** — "Ana Paula, a viagem das 06h00 na Capital–Sul foi cancelada por falta de
+    > veículo. Seu lugar já está reservado na saída das 08h00 e o valor volta integral hoje. Um crédito de 20% fica na sua
     > conta pelo transtorno."
 
-    > **Beatriz** — "Beatriz, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já está
-    > reservado na saída das 08h00 e o valor volta integral hoje."
+    > **Beatriz** — "Beatriz, a viagem das 06h00 na Capital–Sul foi cancelada por falta de veículo.
+    > Seu lugar já está reservado na saída das 08h00 e o valor volta integral hoje."
 
-    > **Diego** — "Diego, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já está
-    > reservado na saída das 08h00 e o valor volta integral hoje."
+    > **Diego** — "Diego, a viagem das 06h00 na Capital–Sul foi cancelada por falta de veículo.
+    > Seu lugar já está reservado na saída das 08h00 e o valor volta integral hoje."
 
     A frase a mais da Ana Paula é o crédito de 20% que ela manteve e os outros dois perderam para o
     teto. Repetir o texto e variar só a última frase é o ponto da página, não um defeito dela: prova

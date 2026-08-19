@@ -369,13 +369,13 @@ export const MENSAGENS: Record<string, string> = {
     '{nome}, a {linha} das {horarioPartida} atrasou e a nova saída é {horarioRevisado}. Na sua última viagem conosco você ficou sem informação; desta vez o aviso saiu antes de você chegar ao terminal. {compensacao}',
 
   'quebra:informativo':
-    '{nome}, o veículo da {linha} teve falha mecânica. A troca já foi acionada e a saída passa para {horarioRevisado}. Seu assento está garantido e o embarque é na mesma plataforma.',
+    '{nome}, o veículo das {horarioPartida} na {linha} teve falha mecânica. A troca já foi acionada e a saída passa para {horarioRevisado}. Seu assento está garantido e o embarque é na mesma plataforma.',
   'quebra:atencioso':
-    '{nome}, o veículo da {linha} teve falha mecânica e a saída passa para {horarioRevisado}. Seu assento continua reservado. Se esse horário não servir, responda aqui e colocamos você na próxima saída sem taxa.',
+    '{nome}, o veículo das {horarioPartida} na {linha} teve falha mecânica e a saída passa para {horarioRevisado}. Seu assento continua reservado. Se esse horário não servir, responda aqui e colocamos você na próxima saída sem taxa.',
   'quebra:reparador':
-    '{nome}, o veículo da {linha} teve falha mecânica. Já acionamos a troca e a saída passa para {horarioRevisado}. Seu assento está garantido. {compensacao}',
+    '{nome}, o veículo das {horarioPartida} na {linha} teve falha mecânica. Já acionamos a troca e a saída passa para {horarioRevisado}. Seu assento está garantido. {compensacao}',
   'quebra:reconquista':
-    '{nome}, houve falha mecânica no veículo da {linha} e a saída passa para {horarioRevisado}. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um atendente está com o seu caso e liga em cinco minutos. {compensacao}',
+    '{nome}, houve falha mecânica no veículo das {horarioPartida} na {linha} e a saída passa para {horarioRevisado}. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um atendente está com o seu caso e liga em cinco minutos. {compensacao}',
 
   'mudanca_plataforma:informativo':
     '{nome}, a {linha} mudou de plataforma e o embarque passa a ser na {plataforma}. O horário segue {horarioRevisado} e os painéis do terminal já estão atualizados.',
@@ -387,13 +387,13 @@ export const MENSAGENS: Record<string, string> = {
     '{nome}, a {linha} embarca hoje na plataforma {plataforma}, às {horarioRevisado}. Da última vez uma mudança dessas não chegou até você; agora chega. Qualquer nova alteração aparece aqui primeiro.',
 
   'cancelamento:informativo':
-    '{nome}, a {linha} foi cancelada por falta de veículo. Seu lugar já está reservado na saída das {horarioRevisado} e o valor volta integral hoje.',
+    '{nome}, a viagem das {horarioPartida} na {linha} foi cancelada por falta de veículo. Seu lugar já está reservado na saída das {horarioRevisado} e o valor volta integral hoje.',
   'cancelamento:atencioso':
-    '{nome}, a {linha} foi cancelada por falta de veículo. O valor volta integral hoje e há lugar na saída das {horarioRevisado}. Responda aqui e reservamos para você, sem taxa.',
+    '{nome}, a viagem das {horarioPartida} na {linha} foi cancelada por falta de veículo. O valor volta integral hoje e há lugar na saída das {horarioRevisado}. Responda aqui e reservamos para você, sem taxa.',
   'cancelamento:reparador':
-    '{nome}, a {linha} foi cancelada por falta de veículo. Seu lugar já está reservado na saída das {horarioRevisado} e o valor volta integral hoje. {compensacao}',
+    '{nome}, a viagem das {horarioPartida} na {linha} foi cancelada por falta de veículo. Seu lugar já está reservado na saída das {horarioRevisado} e o valor volta integral hoje. {compensacao}',
   'cancelamento:reconquista':
-    '{nome}, a {linha} foi cancelada por falta de veículo. O valor volta integral hoje e seu lugar está garantido às {horarioRevisado}. Da última vez você soube de uma mudança só no terminal; este aviso saiu em um minuto. {compensacao}',
+    '{nome}, a viagem das {horarioPartida} na {linha} foi cancelada por falta de veículo. O valor volta integral hoje e seu lugar está garantido às {horarioRevisado}. Da última vez você soube de uma mudança só no terminal; este aviso saiu em um minuto. {compensacao}',
 
   'preembarque:informativo':
     '{nome}, sua viagem na {linha} sai às {horarioRevisado}, na plataforma {plataforma}. O embarque começa vinte minutos antes. Se alguma coisa mudar, avisamos por aqui antes de você sair de casa.',
