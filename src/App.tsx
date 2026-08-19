@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { PASSAGEIROS, VIAGENS, passageiroPorId, type Viagem } from './dados';
+import { CASO_ABERTO_CARLOS } from './dadosV2';
 import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
 import { Conversa, hora, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
 import { Inspetor } from './ui/Inspetor';
 import { Metricas } from './ui/Metricas';
-import { FilaDeCasos, Pesquisa, casosDe } from './ui/PosViagem';
+import { Copiloto } from './ui/Copiloto';
+import { FilaDeCasos, Pesquisa, casosDe, type Caso } from './ui/PosViagem';
 
 const OCORRENCIAS = [
   { id: 'atraso', rotulo: 'Atraso longo', minutos: 80 },
@@ -27,6 +29,7 @@ export default function App() {
   const [alvoId, setAlvoId] = useState<string>('p-09');
   const [concluidas, setConcluidas] = useState<string[]>([]);
   const [modoIA, setModoIA] = useState(false);
+  const [casoAberto, setCasoAberto] = useState<string | null>(null);
   const [notas, setNotas] = useState<Record<string, number>>({});
 
   const viagem = VIAGENS.find((v) => v.id === viagemId)!;
@@ -73,7 +76,24 @@ export default function App() {
     return m;
   }, [eventos]);
 
-  const casos = useMemo(() => casosDe(notas, ocorrenciaPorViagem), [notas, ocorrenciaPorViagem]);
+  /**
+   * A reclamação do Carlos, aberta há seis meses e nunca respondida, já está na
+   * fila antes de qualquer pesquisa: é a regra da v1 de que caso antigo sem
+   * solução fura a fila (seção 4.3 da spec v2).
+   */
+  const casos = useMemo<Caso[]>(
+    () => [
+      {
+        passageiroId: CASO_ABERTO_CARLOS.passageiroId,
+        titulo: CASO_ABERTO_CARLOS.titulo,
+        ocorrencia: CASO_ABERTO_CARLOS.ocorrencia,
+        prazoHoras: CASO_ABERTO_CARLOS.prazoHoras,
+        prioridade: CASO_ABERTO_CARLOS.prioridade,
+      },
+      ...casosDe(notas, ocorrenciaPorViagem),
+    ],
+    [notas, ocorrenciaPorViagem],
+  );
 
   const ultimo = eventos[eventos.length - 1];
   const resumo = ultimo
@@ -206,27 +226,33 @@ export default function App() {
 
         {/* ---------- conversa ---------- */}
         <main className="min-h-0 overflow-y-auto bg-slate-50">
-          <SeletorDeRedacao modoIA={modoIA} aoTrocar={setModoIA} />
-          <Conversa
-            eventos={eventos}
-            selecionadoId={selecionadoId}
-            aoSelecionar={setSelecionadoId}
-            modoIA={modoIA}
-          />
-          {concluidas.map((id) => {
-            const v = VIAGENS.find((x) => x.id === id)!;
-            return (
-              <Pesquisa
-                key={id}
-                viagem={v}
-                alvos={v.passageiroIds.map(passageiroPorId)}
-                notas={notas}
-                aoResponder={(passageiroId, nota) =>
-                  setNotas((atuais) => ({ ...atuais, [`${id}:${passageiroId}`]: nota }))
-                }
+          {casoAberto ? (
+            <Copiloto passageiroId={casoAberto} aoFechar={() => setCasoAberto(null)} />
+          ) : (
+            <>
+              <SeletorDeRedacao modoIA={modoIA} aoTrocar={setModoIA} />
+              <Conversa
+                eventos={eventos}
+                selecionadoId={selecionadoId}
+                aoSelecionar={setSelecionadoId}
+                modoIA={modoIA}
               />
-            );
-          })}
+              {concluidas.map((id) => {
+                const v = VIAGENS.find((x) => x.id === id)!;
+                return (
+                  <Pesquisa
+                    key={id}
+                    viagem={v}
+                    alvos={v.passageiroIds.map(passageiroPorId)}
+                    notas={notas}
+                    aoResponder={(passageiroId, nota) =>
+                      setNotas((atuais) => ({ ...atuais, [`${id}:${passageiroId}`]: nota }))
+                    }
+                  />
+                );
+              })}
+            </>
+          )}
         </main>
 
         {/* ---------- inspetor e números ---------- */}
@@ -245,7 +271,7 @@ export default function App() {
             <Inspetor eventos={eventos} selecionadoId={selecionadoId} modoIA={modoIA} />
           </div>
           {resumo && ultimo && <Metricas resumo={resumo} pessoas={ultimo.decisoes.length} />}
-          <FilaDeCasos casos={casos} />
+          <FilaDeCasos casos={casos} aoAbrir={setCasoAberto} />
         </aside>
       </div>
     </div>

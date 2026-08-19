@@ -3,7 +3,9 @@ import { Etiqueta } from './Etiqueta';
 
 export interface Caso {
   passageiroId: string;
-  nota: number;
+  /** Ausente no caso que já estava aberto antes de qualquer pesquisa. */
+  nota?: number;
+  titulo?: string;
   ocorrencia: string;
   prazoHoras: number;
   prioridade: 'elevada' | 'normal';
@@ -32,7 +34,8 @@ export function casosDe(
   }
   return casos.sort(
     (a, b) =>
-      Number(b.prioridade === 'elevada') - Number(a.prioridade === 'elevada') || a.nota - b.nota,
+      Number(b.prioridade === 'elevada') - Number(a.prioridade === 'elevada') ||
+      (a.nota ?? 0) - (b.nota ?? 0),
   );
 }
 
@@ -120,7 +123,14 @@ export function Pesquisa({
   );
 }
 
-export function FilaDeCasos({ casos }: { casos: Caso[] }) {
+export function FilaDeCasos({
+  casos,
+  aoAbrir,
+}: {
+  casos: Caso[];
+  /** Abre o caso no copiloto da ouvidoria (F2). */
+  aoAbrir?: (passageiroId: string) => void;
+}) {
   if (casos.length === 0) return null;
   return (
     <section className="border-t border-slate-200 px-4 py-3">
@@ -128,20 +138,21 @@ export function FilaDeCasos({ casos }: { casos: Caso[] }) {
         Fila de casos · {casos.length}
       </h2>
       <ul className="space-y-2">
-        {casos.map((c) => {
+        {casos.map((c, i) => {
           const p = passageiroPorId(c.passageiroId);
           const elevada = c.prioridade === 'elevada';
           return (
             <li
-              key={c.passageiroId}
+              key={`${c.passageiroId}-${i}`}
               className={`rounded border-l-4 p-2 text-xs ${
                 elevada ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-50'
               }`}
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="font-medium">{p.nome}</span>
-                <span className="tabular-nums">nota {c.nota}</span>
+                {c.nota !== undefined && <span className="tabular-nums">nota {c.nota}</span>}
               </div>
+              {c.titulo && <div className="text-slate-700">{c.titulo}</div>}
               <div className="text-slate-600">{c.ocorrencia}</div>
               <div className="mt-1 flex justify-between text-slate-500">
                 <span>
@@ -149,6 +160,14 @@ export function FilaDeCasos({ casos }: { casos: Caso[] }) {
                 </span>
                 <span>responder em {c.prazoHoras} h</span>
               </div>
+              {aoAbrir && (
+                <button
+                  onClick={() => aoAbrir(c.passageiroId)}
+                  className="mt-1.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:border-slate-800"
+                >
+                  Abrir no copiloto
+                </button>
+              )}
             </li>
           );
         })}
