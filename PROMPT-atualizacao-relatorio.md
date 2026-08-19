@@ -46,11 +46,11 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 5. **Os dois textos de mensagem passam a ser estes, literalmente:**
 
    > **Mariana** — "Mariana, o veículo da Capital–Interior teve falha mecânica. Já acionamos a
-   > troca e a saída passa para 07:15. Seu assento está garantido. Um crédito de 30% entra na sua
+   > troca e a saída passa para 07h15. Seu assento está garantido. Um crédito de 30% entra na sua
    > conta hoje e a remarcação fica livre, sem taxa."
 
    > **Carlos** — "Carlos, houve falha mecânica no veículo da Capital–Interior e a saída passa
-   > para 07:15. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um
+   > para 07h15. Na sua última viagem você ficou sem informação, e isso não vai se repetir: um
    > atendente está com o seu caso e liga em cinco minutos. Um crédito de 30% entra na sua conta
    > hoje e a remarcação fica livre, sem taxa."
 
@@ -86,34 +86,43 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
     "Cancelamento da viagem das 06h00 · linha capital–sul, 780 quilômetros · passagem de R$ 310 ·
     42 passageiros a bordo · nenhum veículo reserva na garagem".
 
-11. **As três mensagens da página são hoje diferentes uma da outra, e o protótipo produz uma só.**
-    O motor escolhe o texto por ocorrência e tom, não por perfil; Ana Paula, Beatriz e Diego têm o
-    mesmo tom, logo recebem o mesmo texto com o nome trocado, e a diferença entre eles aparece na
-    compensação, não na redação:
+11. **As três mensagens da página passam a ser a mesma, com o nome trocado.** Hoje a página traz
+    três textos distintos para Ana Paula, Beatriz e Diego. O motor escolhe o texto por ocorrência e
+    tom, não por perfil, e os três têm o mesmo tom — a diferença entre eles aparece na compensação,
+    não na redação. Isso foi decidido: o relatório mostra o mesmo texto três vezes. Use estes:
 
-    > "{Nome}, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já está reservado na
-    > saída das 08:00 e o valor volta integral hoje." — e, só para Ana Paula, mais uma frase:
-    > "Um crédito de 20% fica na sua conta pelo transtorno."
+    > **Ana Paula** — "Ana Paula, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já
+    > está reservado na saída das 08h00 e o valor volta integral hoje. Um crédito de 20% fica na sua
+    > conta pelo transtorno."
 
-    **Escolha uma das duas saídas e diga qual escolheu:** (a) o relatório passa a mostrar o mesmo
-    texto para os três, que é o que o sistema faz; ou (b) o relatório mantém os três textos
-    distintos e ganha uma ressalva dizendo que a variação por perfil dentro do mesmo tom ainda não
-    está implementada. Não invente uma terceira.
+    > **Beatriz** — "Beatriz, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já está
+    > reservado na saída das 08h00 e o valor volta integral hoje."
+
+    > **Diego** — "Diego, a Capital–Sul foi cancelada por falta de veículo. Seu lugar já está
+    > reservado na saída das 08h00 e o valor volta integral hoje."
+
+    A frase a mais da Ana Paula é o crédito de 20% que ela manteve e os outros dois perderam para o
+    teto. Repetir o texto e variar só a última frase é o ponto da página, não um defeito dela: prova
+    que o corte do teto muda o que o passageiro lê, sem que ninguém reescreva mensagem à mão.
 
 ## Página 3 — quem compra no guichê fica sem aviso
 
-12. **O texto do Diego** passa a ser: "Diego, a saída da Capital–Nordeste atrasou e sai às 23:50.
-    Você pode esperar na praça de alimentação e avisamos quinze minutos antes do embarque. Um
-    crédito de 15% já está na sua conta."
+12. **O texto do Diego muda em uma palavra.** O protótipo foi ajustado para escrever horário à
+    brasileira (23h50, não 23:50) e para dizer qual saída atrasou, que era o que a página já fazia
+    melhor que o código. Sobrou uma diferença, o nome da linha:
+
+    > "Diego, a saída das 22h30 **na Capital–Nordeste** atrasou e sai às 23h50. Você pode esperar na
+    > praça de alimentação e avisamos quinze minutos antes do embarque. Um crédito de 15% já está na
+    > sua conta."
 
 13. **O que o sistema fez pela Rosa** passa a ser exatamente estes dois textos, que são o que sai
     no painel e no guichê:
 
-    > **Painel de partidas** — "Capital–Nordeste · plataforma 12 · nova saída 23:50 · atraso
+    > **Painel de partidas** — "Capital–Nordeste · plataforma 12 · nova saída 23h50 · atraso
     > confirmado"
 
     > **Instrução ao guichê** — "Anunciar na plataforma 12: Capital–Nordeste atrasada, nova saída
-    > 23:50. Informar um a um os passageiros sem contato cadastrado e recolher um telefone para o
+    > 23h50. Informar um a um os passageiros sem contato cadastrado e recolher um telefone para o
     > próximo aviso."
 
     Repare que a instrução ao guichê **não promete crédito nenhum**, e isso é deliberado: a própria
@@ -125,7 +134,7 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 14. **A mensagem do Jorge promete uma personalização que o sistema não entrega.** Hoje o relatório
     diz "A linha que você usava agora tem saída também às 19h". O gatilho de win-back não carrega
     viagem nenhuma — ele parte de uma revisão mensal de quem sumiu, não de um bilhete —, então o
-    texto real sai genérico: "A sua linha agora tem saída também às 18:00". Ou o relatório adota o
+    texto real sai genérico: "A sua linha agora tem saída também às 18h00". Ou o relatório adota o
     texto genérico, ou registra que ligar o convite à linha específica do passageiro exige um dado
     que o gatilho ainda não recebe. Prefiro a segunda: a promessa é boa, só não está construída.
 
@@ -153,6 +162,6 @@ entre aspas, use-o literalmente: são as strings que o sistema realmente produz.
 
 ## Ao terminar
 
-Liste, em não mais que dez linhas, o que você mudou e as duas decisões que pedi que você tomasse
-(item 11 e item 14). Se encontrar no relatório alguma outra afirmação que o protótipo não sustenta,
+Liste, em não mais que dez linhas, o que você mudou e a decisão que pedi que você tomasse
+(item 14 — a única que continua em aberto). Se encontrar no relatório alguma outra afirmação que o protótipo não sustenta,
 diga qual — não conserte sozinho.

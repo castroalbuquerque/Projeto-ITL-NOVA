@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { PASSAGEIROS, VIAGENS, passageiroPorId, type Viagem } from './dados';
 import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
-import { Conversa, rotuloDoGatilho, type Evento } from './ui/Conversa';
+import { Conversa, hora, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
 import { Inspetor } from './ui/Inspetor';
 import { Metricas } from './ui/Metricas';
@@ -113,7 +113,7 @@ export default function App() {
                 >
                   <div className="font-medium">{v.linha}</div>
                   <div className={v.id === viagemId ? 'text-slate-300' : 'text-slate-500'}>
-                    {v.partida} · plataforma {v.plataforma} · {nomes(v)}
+                    {hora(v.partida)} · plataforma {v.plataforma} · {nomes(v)}
                   </div>
                 </button>
               ))}

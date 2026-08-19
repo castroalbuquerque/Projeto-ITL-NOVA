@@ -10,6 +10,11 @@ function somarMinutos(hhmm: string, minutos: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
+/** Horário para leitura humana: 23h50, não 23:50. */
+export function hora(hhmm: string): string {
+  return hhmm.replace(':', 'h');
+}
+
 /** Quando a ocorrência entra no sistema, em relação à partida. */
 const ANTECEDENCIA: Record<string, number> = {
   atraso: 0,
@@ -58,7 +63,8 @@ export function renderizar(chave: string, d: Decisao, g: Gatilho, v: Viagem | nu
   return modelo
     .replace(/\{nome\}/g, d.nome)
     .replace(/\{linha\}/g, v ? v.linha : 'sua linha')
-    .replace(/\{horarioRevisado\}/g, horarioRevisado(g, v))
+    .replace(/\{horarioRevisado\}/g, hora(horarioRevisado(g, v)))
+    .replace(/\{horarioPartida\}/g, v ? hora(v.partida) : 'sua saída')
     .replace(/\{plataforma\}/g, v ? v.plataforma : '—')
     .replace(/\{compensacao\}/g, fraseDeCompensacao(d.compensacoes))
     .replace(/\s+([.,])/g, '$1')
@@ -114,7 +120,7 @@ export function Conversa({
           <div className="mb-3 flex items-center gap-2">
             <span className="h-px flex-1 bg-slate-200" />
             <span className="text-xs text-slate-500">
-              {rotuloDoGatilho(e.gatilho)} · {momentoDoEvento(e.gatilho, e.viagem)}
+              {rotuloDoGatilho(e.gatilho)} · {hora(momentoDoEvento(e.gatilho, e.viagem))}
               {e.viagem ? ` · ${e.viagem.linha}` : ''}
             </span>
             <span className="h-px flex-1 bg-slate-200" />
@@ -181,7 +187,7 @@ function Bloco({
                   : '—'}
             </div>
             <div className="mt-1 text-xs text-slate-400">
-              {horario} · {r.canais.join(', ')} · {r.id}
+              {hora(horario)} · {r.canais.join(', ')} · {r.id}
               {r.atrasoEnvioMinutos ? ` · ${r.atrasoEnvioMinutos} min após a ocorrência` : ''}
             </div>
           </div>

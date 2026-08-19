@@ -355,18 +355,18 @@ export function conferenciaDeCadastro() {
 // Banco de mensagens. Escritas à mão para o exercício, nenhuma gerada em runtime.
 // Regra de redação: até 320 caracteres, sem emoji, sem pedido de desculpas
 // genérico, sempre com o próximo passo concreto e o horário revisado.
-// Placeholders: {nome} {linha} {horarioRevisado} {compensacao} {plataforma}
+// Placeholders: {nome} {linha} {horarioPartida} {horarioRevisado} {compensacao} {plataforma}
 // ---------------------------------------------------------------------------
 
 export const MENSAGENS: Record<string, string> = {
   'atraso:informativo':
-    '{nome}, a saída da {linha} atrasou e passa para {horarioRevisado}. A plataforma segue a mesma e o embarque começa quinze minutos antes. Se o horário mudar de novo, avisamos por aqui.',
+    '{nome}, a saída das {horarioPartida} na {linha} atrasou e passa para {horarioRevisado}. A plataforma segue a mesma e o embarque começa quinze minutos antes. Se o horário mudar de novo, avisamos por aqui.',
   'atraso:atencioso':
-    '{nome}, a {linha} atrasou e a nova saída é {horarioRevisado}. Você pode esperar na praça de alimentação, avisamos quinze minutos antes do embarque. Se preferir outro horário, responda aqui e remarcamos sem taxa.',
+    '{nome}, a {linha} das {horarioPartida} atrasou e a nova saída é {horarioRevisado}. Você pode esperar na praça de alimentação, avisamos quinze minutos antes do embarque. Se preferir outro horário, responda aqui e remarcamos sem taxa.',
   'atraso:reparador':
-    '{nome}, a saída da {linha} atrasou e sai às {horarioRevisado}. Você pode esperar na praça de alimentação e avisamos quinze minutos antes do embarque. {compensacao}',
+    '{nome}, a saída das {horarioPartida} na {linha} atrasou e sai às {horarioRevisado}. Você pode esperar na praça de alimentação e avisamos quinze minutos antes do embarque. {compensacao}',
   'atraso:reconquista':
-    '{nome}, a {linha} atrasou e a nova saída é {horarioRevisado}. Na sua última viagem conosco você ficou sem informação; desta vez o aviso saiu antes de você chegar ao terminal. {compensacao}',
+    '{nome}, a {linha} das {horarioPartida} atrasou e a nova saída é {horarioRevisado}. Na sua última viagem conosco você ficou sem informação; desta vez o aviso saiu antes de você chegar ao terminal. {compensacao}',
 
   'quebra:informativo':
     '{nome}, o veículo da {linha} teve falha mecânica. A troca já foi acionada e a saída passa para {horarioRevisado}. Seu assento está garantido e o embarque é na mesma plataforma.',
