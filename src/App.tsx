@@ -5,6 +5,7 @@ import { Conversa, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
 import { Inspetor } from './ui/Inspetor';
 import { Metricas } from './ui/Metricas';
+import { FilaDeCasos, Pesquisa, casosDe } from './ui/PosViagem';
 
 const OCORRENCIAS = [
   { id: 'atraso', rotulo: 'Atraso longo', minutos: 80 },
@@ -24,6 +25,8 @@ export default function App() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const [alvoId, setAlvoId] = useState<string>('p-09');
+  const [concluidas, setConcluidas] = useState<string[]>([]);
+  const [notas, setNotas] = useState<Record<string, number>>({});
 
   const viagem = VIAGENS.find((v) => v.id === viagemId)!;
 
@@ -59,6 +62,17 @@ export default function App() {
     setEventos((atuais) => [...atuais, { gatilho, viagem: null, decisoes }]);
     setSelecionadoId(p.id);
   }
+
+  /** Última ocorrência disparada em cada viagem: é o que rotula o caso na fila. */
+  const ocorrenciaPorViagem = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const e of eventos) {
+      if (e.viagem && e.gatilho.tipo === 'ocorrencia') m[e.viagem.id] = rotuloDoGatilho(e.gatilho);
+    }
+    return m;
+  }, [eventos]);
+
+  const casos = useMemo(() => casosDe(notas, ocorrenciaPorViagem), [notas, ocorrenciaPorViagem]);
 
   const ultimo = eventos[eventos.length - 1];
   const resumo = ultimo
@@ -155,16 +169,35 @@ export default function App() {
             </div>
           </section>
 
-          {eventos.length > 0 && (
+          <section className="border-t border-slate-200 px-4 py-3">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Depois da viagem
+            </h2>
+            <button
+              onClick={() =>
+                setConcluidas((atuais) =>
+                  atuais.includes(viagemId) ? atuais : [...atuais, viagemId],
+                )
+              }
+              disabled={concluidas.includes(viagemId)}
+              className="w-full rounded border border-slate-200 px-2 py-1.5 text-left text-xs hover:border-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:border-slate-200 disabled:hover:bg-transparent"
+            >
+              {concluidas.includes(viagemId) ? 'Viagem concluída' : 'Concluir viagem'}
+            </button>
+          </section>
+
+          {(eventos.length > 0 || concluidas.length > 0) && (
             <section className="border-t border-slate-200 px-4 py-3">
               <button
                 onClick={() => {
                   setEventos([]);
+                  setConcluidas([]);
+                  setNotas({});
                   setSelecionadoId(null);
                 }}
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:border-slate-800"
               >
-                Limpar os {eventos.length} gatilhos disparados
+                Resetar
               </button>
             </section>
           )}
@@ -177,6 +210,20 @@ export default function App() {
             selecionadoId={selecionadoId}
             aoSelecionar={setSelecionadoId}
           />
+          {concluidas.map((id) => {
+            const v = VIAGENS.find((x) => x.id === id)!;
+            return (
+              <Pesquisa
+                key={id}
+                viagem={v}
+                alvos={v.passageiroIds.map(passageiroPorId)}
+                notas={notas}
+                aoResponder={(passageiroId, nota) =>
+                  setNotas((atuais) => ({ ...atuais, [`${id}:${passageiroId}`]: nota }))
+                }
+              />
+            );
+          })}
         </main>
 
         {/* ---------- inspetor e números ---------- */}
@@ -195,6 +242,7 @@ export default function App() {
             <Inspetor eventos={eventos} selecionadoId={selecionadoId} />
           </div>
           {resumo && ultimo && <Metricas resumo={resumo} pessoas={ultimo.decisoes.length} />}
+          <FilaDeCasos casos={casos} />
         </aside>
       </div>
     </div>

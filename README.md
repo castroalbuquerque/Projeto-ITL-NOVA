@@ -1,32 +1,148 @@
-# React + TypeScript + Vite
+# Central de Transparência
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Protótipo funcional de comunicação proativa no transporte rodoviário. Exercício acadêmico.
 
-Currently, two official plugins are available:
+Dado um evento, existe uma lógica explícita que decide **quem é avisado, quando, com que tom e
+com qual compensação** — e essa lógica muda conforme o perfil do passageiro e conforme existir ou
+não caminho até ele. O ativo do protótipo é o motor de regras, visível na tela. A conversa é só a
+evidência.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Como rodar
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev     # interface em http://localhost:5173
+npm test        # 7 asserções sobre o motor
+npm run build   # typecheck e build de produção
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Sem backend, sem `.env`, sem chamada a API em runtime, sem biblioteca de componentes, sem router.
+Estado em `useState` no `App.tsx`. Nada é persistido: recarregar a página zera tudo.
+
+## O que é real e o que é simulado
+
+**Real:** a lógica de decisão. As regras, os quatro bloqueios e o cálculo de custo e de teto rodam
+de verdade e podem ser conferidos passo a passo na coluna da direita. `decidir()` é uma função pura
+e roda sem nenhuma interface — os testes a exercitam sem montar um componente.
+
+**Simulado:** tudo o mais. Os 11 passageiros, as 3 viagens e as 28 mensagens foram escritos à mão
+para o exercício. Nenhuma mensagem é enviada. Não há localização por satélite, não há sistema de
+clientes, não há persistência. As duas proporções de alcance por canal de compra (67% e 27%) saíram
+da base inventada do exercício.
+
+## Estrutura
+
+```
+src/
+  dados.ts        tipos, 11 passageiros, 3 viagens, banco de 28 mensagens
+  motor.ts        9 regras como array de objetos, decidir(), bloqueios B0–B3, custos
+  motor.test.ts   7 asserções
+  App.tsx         três colunas e todo o estado
+  ui/
+    Conversa.tsx  bolhas, horários, ações de terminal, substituição de placeholders
+    Inspetor.tsx  o canhoto: regras aplicadas, bloqueadas e o motivo de cada bloqueio
+    Metricas.tsx  cobertura, custo, bloqueios por motivo, quem ficou sem aviso
+    PosViagem.tsx pesquisa de nota 0–10 e fila de casos
+    Etiqueta.tsx  etiqueta de grupo, com marcador apagado para quem está fora dos conjuntos
+```
+
+### As regras
+
+| # | Gatilho | Condição | Canal | Prazo | Tom | Compensação |
+|---|---|---|---|---|---|---|
+| R1 | ocorrência | atraso > 60 min | whatsapp | 3 min | reparador | crédito 15% |
+| R2 | ocorrência | quebra de veículo | whatsapp | 2 min | reparador | crédito 30% + remarcação livre |
+| R3 | ocorrência | quebra + grupo 1 ou 2 | + ligação | 10 min | reparador | idem R2 |
+| R3b | ocorrência | quebra + grupo 5 | + ligação | 5 min | reparador | idem R2 |
+| R4 | ocorrência | mudança de plataforma | whatsapp | imediato | informativo | nenhuma |
+| R5 | ocorrência | cancelamento | whatsapp | 1 min | reparador | reembolso + lugar em outro horário + crédito 20% |
+| R6 | win-back | sem viajar há > 120 dias | whatsapp | — | reconquista | oferta dirigida |
+| R7 | marco | 5 viagens em 4 meses **e** gasto em alta **e** grupo ≠ 1 | whatsapp | 24 h | informativo | subida de classe por 30 dias |
+| R8 | padrão | 3 passagens não usadas em 6 meses | **nenhum** | — | — | nenhuma |
+
+A R8 é a mais importante do conjunto e não envia nada: registra o padrão e abre caso de
+investigação. Existe para provar que o motor sabe decidir não agir.
+
+### Os bloqueios, nesta ordem
+
+- **B0 · alcance.** Sem contato cadastrado, nenhuma mensagem sai — nem transacional. Degrada para
+  painel do terminal e instrução ao guichê, que custam zero e não contam para o limite de três.
+- **B1 · autorização.** Sem consentimento, bloqueia só o que é comercial (R6 e R7). Aviso sobre a
+  viagem comprada sempre passa.
+- **B2 · limite.** Máximo 3 mensagens por passageiro por viagem.
+- **B3 · teto.** Benefício extra limitado a R$ 2.000 por ocorrência. Reembolso e lugar em outro
+  horário ficam fora do teto — são direito de quem pagou. Ao estourar, corta o benefício extra
+  começando pelo menos frequente, e registra cada corte com nome e valor.
+
+B0 e B1 respondem perguntas diferentes e não devem ser fundidos: alcance decide se qualquer
+mensagem sai, autorização decide só se pode haver mensagem comercial. Os dois bloqueios se acumulam
+— quem não tem contato nem autorização aparece barrado duas vezes, com dois motivos distintos.
+
+## Roteiro de demo, 4 minutos
+
+1. **Quebra, na Capital–Interior** (~40 s). Dispare *Quebra de veículo*. Mariana e Carlos recebem
+   textos diferentes na mesma falha: ela o reparador com crédito de 30%, ele o de reconquista, que
+   reconhece a viagem anterior sem aviso. Clique em cada um e leia o canhoto à direita: a ligação
+   dela sai em 10 minutos pela R3, a dele em 5 pela R3b.
+2. **Cancelamento com teto, na Capital–Sul** (~60 s). Resete, troque a viagem e dispare
+   *Cancelamento*. Ana Paula mantém o crédito de 20%; Beatriz e Diego perdem o seu. Nos números:
+   R$ 2.604 pedidos, R$ 1.984 pagos, 10 cortes, começando pelos dois de menos histórico. Reembolso
+   e lugar em outro horário permanecem nas três decisões — o teto não os alcança.
+3. **Atraso noturno, na Capital–Nordeste** (~40 s). Resete e dispare *Atraso longo*. Diego é avisado
+   em 3 minutos. Rosa, do grupo mais valioso da base, não recebe nada: sai painel de partidas e
+   instrução ao guichê, com moldura diferente porque não é conversa. A cobertura cai para 50% e o
+   número em destaque marca 1.
+4. **Marco: Letícia e Marcos** (~40 s). Em *gatilho de pessoa*, escolha Letícia e dispare *Marco* —
+   convite de subida de classe, sem desconto e sem pedir nada em troca. Troque para Marcos, mesmo
+   ritmo de viagem e autorização dada, e dispare de novo: B0. Ele é o caso que separa alcance de
+   autorização; nos outros dez, as duas coisas andam juntas.
+5. **Win-back bloqueado: Sandra** (~25 s). Dispare *Win-back* para ela. Duas barras vermelhas no
+   canhoto: B0 e B1. Compare com Jorge, mesma ausência e mesmo grupo de origem, que recebe convite.
+6. **Padrão de não embarque: Wilson** (~25 s). Dispare *Padrão de não embarque*. R8 aplicada,
+   nenhuma mensagem, registro interno de caso para investigação. É o motor decidindo não agir.
+7. **A ouvidoria** (~30 s). Volte à Capital–Interior, dispare a quebra, clique em *Concluir viagem*
+   e dê nota 4 ao Carlos. O caso entra na fila com prioridade elevada e prazo de 24 h, porque ele já
+   tinha ocorrência aberta. A mesma nota para Mariana entra com 72 h.
+
+## Hipóteses não validadas
+
+1. Comunicação proativa reduzir evasão é **hipótese**, não resultado. Boa parte do churn em
+   rodoviário é preço, malha e tempo porta a porta.
+2. Validar exigiria piloto A/B numa linha, com grupo de controle sem régua, medindo recompra
+   em 90 dias — não pesquisa de satisfação.
+3. Régua agressiva gera opt-out. Daí o B2.
+4. Compensação pode custar mais que o LTV preservado. Daí o B3.
+5. LGPD: mensagem transacional tem base legal na execução do contrato; win-back e convite de
+   marco são marketing e exigem consentimento. Daí o B1.
+6. **O campo de autorização não existe na base de dados do exercício.** Foi criado por nós.
+   O alcance de canal, esse sim, está nos dados.
+7. **Os seis grupos são convenção, não descoberta.** Três métodos foram testados e nenhum
+   encontrou grupos naturais; o método de densidade classificou o grupo 6 inteiro como caso
+   isolado. Servem para priorizar, não para afirmar que existem seis tipos de passageiro.
+8. **O perfil do Carlos foi corrigido** em relação ao documento original do projeto: quem está
+   no grupo 5 viaja pouco. Quem viaja sempre e sofre falha quase nunca vai embora.
+9. Dados sintéticos escritos à mão e mensagens pré-geradas. Nada aqui é evidência empírica.
+
+## Onde o código divergiu do relatório visual
+
+O relatório de sete páginas será atualizado depois desta implementação. As divergências que
+apareceram ao programar, e que precisam entrar na próxima versão dele:
+
+- **Página 2, as contas do cancelamento.** A coluna de reembolso implicava passagem de R$ 155
+  (1.395÷9), mas a de crédito extra implicava cerca de R$ 63 por pessoa — 40% da passagem, não os
+  20% da regra. Mantivemos o teto de R$ 2.000 e a passagem da linha foi para R$ 310, que é o que
+  faz o teto encostar. Os totais passam a ser R$ 2.604 pedidos, R$ 620 cortados e R$ 1.984 pagos,
+  contra R$ 2.640 / R$ 640 / R$ 2.000 do relatório. O desfecho é o mesmo: Beatriz e Diego cortados,
+  Ana Paula intacta.
+- **Página 1, o cartão do Carlos.** O relatório dá ligação de atendente a ele, do grupo 5, e não a
+  Mariana, do grupo 1 — o inverso da regra 3. Resolvemos com a R3b, que estende a ligação ao grupo
+  5 com prazo de 5 minutos, o que também corresponde à política de "atendimento caso a caso" que a
+  página 7 atribui ao grupo. Mariana passa a receber ligação também.
+- **Página 1, ainda o Carlos.** O cartão lista "reembolso integral" numa quebra. Reembolso é a
+  compensação do cancelamento; nenhuma regra de quebra o prevê. Tratamos como erro do relatório.
+- **Página 3, a instrução ao guichê.** A mesma página mostra "depositar o crédito de 15%" barrado
+  para a Rosa, então a instrução ao guichê não pode prometer crédito a quem não o recebe. Ela agora
+  manda recolher um telefone para o próximo aviso, que é a recomendação da própria página.
+- **A régua de quatro avisos da página 1** (duas horas antes, na saída, na estrada, na chegada) não
+  foi implementada: só existe a mensagem de pré-embarque, porque a lista de gatilhos da interface
+  não inclui os outros três momentos.
