@@ -400,11 +400,51 @@ function avaliarPassageiro(ctx: Contexto, historico: Historico): Decisao {
 
 // --- B3 · teto --------------------------------------------------------------
 
-interface Candidato {
+export interface Candidato {
   nome: string;
   frequencia: number; // viagens em 24 meses; é o que ordena o corte
   valor: number;
   chave?: string; // 'passageiroId#índice da compensação', vazio para quem não tem nome
+}
+
+export interface ResultadoDoTeto {
+  pedido: number;
+  pago: number;
+  cortes: { nome: string; valor: number }[];
+  cortados: Set<string>;
+}
+
+/**
+ * A ordem de corte do B3, isolada como função pura: corta começando pelo menos
+ * frequente e só alcança o que está dentro do teto — reembolso e lugar em outro
+ * horário não entram na lista de candidatos e por isso nunca são cortados.
+ *
+ * Vive aqui, e não no painel do lote da v2, porque quem corta é o sistema de
+ * regras, nunca o agente (seção 5.3 da spec v2).
+ */
+export function ordemDeCorte(
+  candidatos: Candidato[],
+  teto: number = TETO_POR_OCORRENCIA,
+): ResultadoDoTeto {
+  const pedido = candidatos.reduce((s, c) => s + c.valor, 0);
+  if (pedido <= teto) return { pedido, pago: pedido, cortes: [], cortados: new Set() };
+
+  const ordem = [...candidatos].sort(
+    (a, b) => a.frequencia - b.frequencia || a.nome.localeCompare(b.nome),
+  );
+
+  let pago = pedido;
+  const cortes: { nome: string; valor: number }[] = [];
+  const cortados = new Set<string>();
+
+  for (const c of ordem) {
+    if (pago <= teto) break;
+    pago -= c.valor;
+    cortes.push({ nome: c.nome, valor: c.valor });
+    if (c.chave) cortados.add(c.chave);
+  }
+
+  return { pedido, pago, cortes, cortados };
 }
 
 function candidatosDeFundo(faixas: FaixaDeFundo[], valorPorPessoa: number): Candidato[] {
@@ -447,24 +487,8 @@ function aplicarTeto(
     candidatos.push(...candidatosDeFundo(viagem.cargaDeFundo, extraTipico));
   }
 
-  const pedido = candidatos.reduce((s, c) => s + c.valor, 0);
-  if (pedido <= TETO_POR_OCORRENCIA) return { pedido, pago: pedido, cortes: [] };
-
-  // Corta começando pelo menos frequente, e só o que está dentro do teto.
-  const ordem = [...candidatos].sort(
-    (a, b) => a.frequencia - b.frequencia || a.nome.localeCompare(b.nome),
-  );
-
-  let pago = pedido;
-  const cortes: { nome: string; valor: number }[] = [];
-  const cortados = new Set<string>();
-
-  for (const c of ordem) {
-    if (pago <= TETO_POR_OCORRENCIA) break;
-    pago -= c.valor;
-    cortes.push({ nome: c.nome, valor: c.valor });
-    if (c.chave) cortados.add(c.chave);
-  }
+  const { pedido, pago, cortes, cortados } = ordemDeCorte(candidatos);
+  if (cortes.length === 0) return { pedido, pago, cortes };
 
   for (const d of decisoes) {
     const sobreviventes: Compensacao[] = [];

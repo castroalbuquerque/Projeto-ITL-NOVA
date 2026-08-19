@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { PASSAGEIROS, VIAGENS, passageiroPorId, type Viagem } from './dados';
-import { CASO_ABERTO_CARLOS } from './dadosV2';
+import { AVISO_DE_EXEMPLO, CASO_ABERTO_CARLOS, LOTE, resumoDoLote } from './dadosV2';
 import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
 import { Conversa, hora, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
 import { Inspetor } from './ui/Inspetor';
 import { Metricas } from './ui/Metricas';
 import { Copiloto } from './ui/Copiloto';
+import { PainelDoLote } from './ui/Lote';
 import { FilaDeCasos, Pesquisa, casosDe, type Caso } from './ui/PosViagem';
 
 const OCORRENCIAS = [
@@ -30,6 +31,8 @@ export default function App() {
   const [concluidas, setConcluidas] = useState<string[]>([]);
   const [modoIA, setModoIA] = useState(false);
   const [casoAberto, setCasoAberto] = useState<string | null>(null);
+  const [loteAberto, setLoteAberto] = useState(false);
+  const [loteAprovado, setLoteAprovado] = useState(false);
   const [notas, setNotas] = useState<Record<string, number>>({});
 
   const viagem = VIAGENS.find((v) => v.id === viagemId)!;
@@ -105,6 +108,11 @@ export default function App() {
       )
     : null;
 
+  // Lote aprovado alimenta a tela de números da v1 com os números do lote.
+  const doLote = loteAprovado ? resumoDoLote() : null;
+  const resumoNaTela = doLote?.resumo ?? resumo;
+  const pessoasNaTela = doLote?.pessoas ?? ultimo?.decisoes.length ?? 0;
+
   return (
     <div className="flex h-screen flex-col bg-slate-100 text-slate-800">
       <header className="flex items-baseline gap-3 border-b border-slate-300 bg-white px-4 py-2">
@@ -157,6 +165,22 @@ export default function App() {
                 </button>
               ))}
             </div>
+          </section>
+
+          <section className="border-t border-slate-200 px-4 py-3">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Orquestrador (v2)
+            </h2>
+            <button
+              onClick={() => {
+                setLoteAberto(true);
+                setCasoAberto(null);
+              }}
+              className="w-full rounded border border-slate-200 px-2 py-1.5 text-left text-xs hover:border-slate-800 hover:bg-slate-50"
+            >
+              Painel do lote
+              <span className="text-slate-400"> · {LOTE.passageiros} passageiros</span>
+            </button>
           </section>
 
           <section className="border-t border-slate-200 px-4 py-3">
@@ -215,6 +239,7 @@ export default function App() {
                   setConcluidas([]);
                   setNotas({});
                   setSelecionadoId(null);
+                  setLoteAprovado(false);
                 }}
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:border-slate-800"
               >
@@ -226,7 +251,13 @@ export default function App() {
 
         {/* ---------- conversa ---------- */}
         <main className="min-h-0 overflow-y-auto bg-slate-50">
-          {casoAberto ? (
+          {loteAberto ? (
+            <PainelDoLote
+              aprovado={loteAprovado}
+              aoAprovar={() => setLoteAprovado(true)}
+              aoFechar={() => setLoteAberto(false)}
+            />
+          ) : casoAberto ? (
             <Copiloto passageiroId={casoAberto} aoFechar={() => setCasoAberto(null)} />
           ) : (
             <>
@@ -270,7 +301,13 @@ export default function App() {
           <div className="min-h-0 flex-1">
             <Inspetor eventos={eventos} selecionadoId={selecionadoId} modoIA={modoIA} />
           </div>
-          {resumo && ultimo && <Metricas resumo={resumo} pessoas={ultimo.decisoes.length} />}
+          {doLote && (
+            <div className="border-t border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+              Preenchida pelo lote aprovado no orquestrador · {LOTE.redacoesDescartadas} redação
+              descartada pelo validador virou template · {AVISO_DE_EXEMPLO}
+            </div>
+          )}
+          {resumoNaTela && <Metricas resumo={resumoNaTela} pessoas={pessoasNaTela} />}
           <FilaDeCasos casos={casos} aoAbrir={setCasoAberto} />
         </aside>
       </div>

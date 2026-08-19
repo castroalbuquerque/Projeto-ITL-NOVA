@@ -7,6 +7,7 @@
 // texto estático. Referências a "seção N" apontam para SPEC-central-transparencia-v2.md.
 
 import type { Canal } from './dados';
+import { CUSTO_POR_MENSAGEM, type Resumo } from './motor';
 import type { PacoteDeFatos, Redacao } from './validador';
 
 /** Aviso padrão da v1 para número ilustrativo (seção 9, ponto 3). */
@@ -262,8 +263,7 @@ export const PASSOS_DO_ORQUESTRADOR = [
  */
 export const LOTE_COM_ESTOURO = {
   id: 'lote-quebra-0612-estouro',
-  titulo: 'Variação: mesma quebra com compensação de R$ 2.480',
-  custoCompensacao: 2480,
+  titulo: 'Variação: a mesma quebra com o benefício extra estourando o teto',
   teto: 2000,
   foraDoTeto: ['reembolso integral', 'lugar em outro horário', 'remarcação sem taxa'],
   candidatos: [
@@ -287,6 +287,32 @@ export const LOTE_COM_ESTOURO = {
     })),
   ],
 };
+
+/**
+ * Os mesmos números do painel, no formato da tela "Os números da ocorrência" da
+ * v1: aprovar o lote preenche a tela que o comitê já conhece (seção 5.2).
+ *
+ * O aviso de Carlos sai normalmente — quem foi barrada pelo freio de permissão
+ * é a oferta comercial de retorno, não a mensagem sobre a viagem que ele pagou.
+ */
+export function resumoDoLote(lote: PainelDoLote = LOTE): { resumo: Resumo; pessoas: number } {
+  const custoDisparos = Math.round(lote.comContato * CUSTO_POR_MENSAGEM * 100) / 100;
+  return {
+    pessoas: lote.passageiros,
+    resumo: {
+      pessoasAlcancaveis: lote.comContato,
+      pessoasAvisadas: lote.comContato,
+      semAvisoPorFaltaDeContato: lote.semContato,
+      bloqueiosPorMotivo: { B0: lote.semContato, B1: lote.barradasPorFreio },
+      custoDisparos,
+      custoCompensacoes: lote.custoCompensacao,
+      custoTotal: Math.round((custoDisparos + lote.custoCompensacao) * 100) / 100,
+      beneficioExtraPedido: lote.custoCompensacao,
+      beneficioExtraPago: lote.custoCompensacao,
+      cortesPorTeto: [],
+    },
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Seção 7 · O que é real e o que é simulado
