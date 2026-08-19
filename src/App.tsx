@@ -4,6 +4,7 @@ import { AVISO_DE_EXEMPLO, CASO_ABERTO_CARLOS, LOTE, resumoDoLote } from './dado
 import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
 import { Conversa, hora, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
+import { QuadroDeHonestidade } from './ui/Honestidade';
 import { Inspetor } from './ui/Inspetor';
 import { Metricas } from './ui/Metricas';
 import { Copiloto } from './ui/Copiloto';
@@ -115,10 +116,14 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col bg-slate-100 text-slate-800">
-      <header className="flex items-baseline gap-3 border-b border-slate-300 bg-white px-4 py-2">
+      <header className="flex flex-wrap items-baseline gap-3 border-b border-slate-300 bg-white px-4 py-2">
         <h1 className="font-semibold">Central de Transparência</h1>
         <span className="text-xs text-slate-500">
-          protótipo · dados inventados · nenhuma mensagem é enviada de fato
+          protótipo · dados inventados · nenhuma mensagem é enviada de fato · textos de IA gerados
+          antes da apresentação
+        </span>
+        <span className="ml-auto">
+          <QuadroDeHonestidade />
         </span>
       </header>
 

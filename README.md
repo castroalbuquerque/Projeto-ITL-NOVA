@@ -21,14 +21,25 @@ Estado em `useState` no `App.tsx`. Nada é persistido: recarregar a página zera
 
 ## O que é real e o que é simulado
 
-**Real:** a lógica de decisão. As regras, os quatro bloqueios e o cálculo de custo e de teto rodam
-de verdade e podem ser conferidos passo a passo na coluna da direita. `decidir()` é uma função pura
-e roda sem nenhuma interface — os testes a exercitam sem montar um componente.
+Texto da seção 7 da `SPEC-central-transparencia-v2.md`, o mesmo que aparece no protótipo, no botão
+do cabeçalho.
 
-**Simulado:** tudo o mais. Os 12 passageiros, as 3 viagens e as 29 mensagens foram escritos à mão
-para o exercício. Nenhuma mensagem é enviada. Não há localização por satélite, não há sistema de
-clientes, não há persistência. As duas proporções de alcance por canal de compra (67% e 27%) saíram
-da base inventada do exercício.
+**O que é real:** a lógica de decisão (regras, freios, ordem de corte) funciona de verdade e pode
+ser conferida passo a passo. Os textos marcados como "redação por IA" foram efetivamente gerados
+por inteligência artificial a partir dessas regras — gerados antes da apresentação e embutidos
+aqui, não ao vivo.
+
+**O que é simulado:** passageiros, viagens, ocorrências e valores são inventados; nenhuma mensagem
+é enviada de fato; o efeito de "digitação" é reproduzido, não gerado na hora.
+
+**O que ainda é aposta:** que personalização por IA reduza evasão é hipótese, como todo o programa.
+Validar exige piloto em linha real com grupo de controle — e, para a IA, medir taxa de erro de
+redação, custo por disparo e latência em escala, o que seis mensagens de demonstração não provam.
+
+Em números: os 12 passageiros, as 3 viagens e as 29 mensagens de template foram escritos à mão para
+o exercício; `decidir()` é função pura e roda sem interface, exercitada pelos testes. Não há
+localização por satélite, sistema de clientes nem persistência. As duas proporções de alcance por
+canal de compra (67% e 27%) saíram da base inventada do exercício.
 
 ## Estrutura
 
