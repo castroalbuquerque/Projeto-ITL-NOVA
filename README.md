@@ -269,11 +269,11 @@ apareceram ao programar, e que precisam entrar na próxima versão dele:
   tempo o motor discordava, dando crédito de 30%. Agora a R3b concede o pacote da spec e a R2 deixa
   de somar crédito para o grupo 5: canhoto, template e redação de IA dizem a mesma coisa. O
   reembolso é o da viagem que ficou em aberto, não o da viagem de hoje, e fica fora do teto.
-- **O motivo do freio no Carlos.** A spec escreve, na nota de guardrail (seção 4.2) e no painel do
-  lote (seção 5.2), que a oferta ao Carlos é barrada por falta de consentimento. Na base do
-  protótipo ele autoriza ser procurado, e o que retém a oferta é a reclamação em aberto (B4). As
-  duas telas passaram a dizer esse motivo, em vez do da spec, para não afirmarem algo que a decisão
-  não sustenta. Quem separa consentimento de dívida na base é a Beatriz, barrada pelo B1 sozinho.
+- **O motivo do freio no Carlos — corrigido na spec.** A versão 2.0 da spec escrevia, na nota de
+  guardrail (seção 4.2) e no painel do lote (seção 5.2), que a oferta ao Carlos era barrada por
+  falta de consentimento. Na base do protótipo ele autoriza ser procurado, e o que retém a oferta é
+  a reclamação em aberto (B4). A spec 2.1 passou a dizer esse motivo, e a seção 0 dela registra a
+  correção. Quem separa consentimento de dívida na base é a Beatriz, barrada pelo B1 sozinho.
 - **O limite de 4 frases.** A seção 3.4 o coloca como instrução do prompt e a 3.1 manda o validador
   conferir fatos travados; o texto aprovado do Carlos, na própria spec, tem 5 frases. O validador
   registra o excesso no canhoto sem descartar a redação.
