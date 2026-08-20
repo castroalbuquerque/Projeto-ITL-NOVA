@@ -7,6 +7,26 @@ com qual compensação** — e essa lógica muda conforme o perfil do passageiro
 não caminho até ele. O ativo do protótipo é o motor de regras, visível na tela. A conversa é só a
 evidência.
 
+## Baixar e abrir, sem instalar nada
+
+Para quem só quer ver o protótipo — comitê, orientador, colega —, existe um arquivo único:
+
+**[`pacote/central-de-transparencia-v2.html`](pacote/central-de-transparencia-v2.html)** · 286 kB
+
+Abra o arquivo no GitHub, clique em *Download raw file*, e depois dê **duplo clique** no arquivo
+baixado: ele abre no navegador e funciona inteiro. Sem instalar nada, sem Node, sem servidor e sem
+internet — o HTML, o CSS, o JavaScript e o ícone estão todos dentro dele. É o "artefato único
+autocontido" que a seção 6.1 da spec v2 pede, e é o que se leva para a apresentação.
+
+Para gerar de novo, depois de mexer no código:
+
+```bash
+npm run empacotar   # reescreve pacote/central-de-transparencia-v2.html
+```
+
+O empacotador (`scripts/empacotar.ts`) recusa a gerar o arquivo se sobrar qualquer referência
+externa nele — é essa conferência que sustenta a promessa de rodar offline.
+
 ## Como rodar
 
 ```bash
@@ -15,6 +35,7 @@ npm run dev            # interface em http://localhost:5173
 npm test               # 19 asserções: motor, ordem de corte e validador de fatos
 npm run build          # typecheck e build de produção
 npm run gerar:conteudo # reescreve o registro de conteudo-v2/ a partir de src/dadosV2.ts
+npm run empacotar      # gera o arquivo único de pacote/, para baixar e abrir com duplo clique
 ```
 
 Sem backend, sem `.env`, sem chamada a API em runtime, sem biblioteca de componentes, sem router.
@@ -82,7 +103,10 @@ src/
     Honestidade.tsx v2: o quadro "o que é real e o que é simulado"
 scripts/
   gerar_conteudo_v2.ts   monta prompt e pacote de fatos; a chamada de modelo é manual
+  empacotar.ts           costura CSS, JavaScript e ícone em um HTML só
 conteudo-v2/             prompt, fatos, saída bruta e saída aprovada, versionados
+pacote/                  o arquivo único distribuível, gerado por npm run empacotar
+vite.config.pacote.ts    build de um pedaço só de JS e CSS, para o empacotador costurar
 ```
 
 ### As regras
