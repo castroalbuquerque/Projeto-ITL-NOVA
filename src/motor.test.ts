@@ -48,6 +48,23 @@ describe('motor de regras', () => {
   });
 
   it('com contato e sem autorização: recebe aviso de viagem e não recebe convite', () => {
+    // A Beatriz é quem carrega o B1 sozinho: tem caminho, não autorizou, e nada
+    // deve ao passageiro que justifique falar com ela assim mesmo.
+    const beatriz = por(
+      decidir({ tipo: 'winback', passageiroId: 'p-04' }, null, PASSAGEIROS),
+      'p-04',
+    );
+    expect(beatriz.enviar).toBe(false);
+    expect(beatriz.regrasAplicadas).not.toContain('R6');
+    expect(beatriz.regrasBloqueadas).toContainEqual({
+      id: 'B1',
+      motivo: 'R6: sem autorização para mensagem comercial',
+    });
+    // Sem mensagem que possa sair, não há compensação a conceder nem a custear.
+    expect(beatriz.compensacoes).toHaveLength(0);
+
+    // O Carlos autoriza ser procurado: o aviso da viagem sai, e o que retém o
+    // convite comercial é a reclamação em aberto.
     const carlos = por(decidir(quebra, v01, PASSAGEIROS), 'p-02');
     expect(carlos.enviar).toBe(true);
     expect(carlos.regrasAplicadas).toContain('R2');
@@ -56,10 +73,10 @@ describe('motor de regras', () => {
     const winback = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
     expect(winback.regrasAplicadas).not.toContain('R6'); // o convite comercial não sai
     expect(winback.regrasBloqueadas).toContainEqual({
-      id: 'B1',
-      motivo: 'R6: sem autorização para mensagem comercial',
+      id: 'B4',
+      motivo: 'R6: há caso aberto, convite comercial só depois de resolvê-lo',
     });
-    // mas resolver o caso aberto dele é atendimento, e passa sem autorização
+    // e resolver o caso aberto dele é atendimento, não propaganda
     expect(winback.regrasAplicadas).toContain('R6b');
     expect(winback.chaveMensagem).toBe('winback:reparador');
     expect(winback.compensacoes).toHaveLength(0);
@@ -74,10 +91,18 @@ describe('motor de regras', () => {
     expect(carlos.regrasAplicadas).toContain('R2');
     expect(carlos.regrasAplicadas).not.toContain('R9');
     expect(carlos.regrasBloqueadas).toContainEqual({
-      id: 'B1',
-      motivo: 'R9: sem autorização para mensagem comercial',
+      id: 'B4',
+      motivo: 'R9: há caso aberto, convite comercial só depois de resolvê-lo',
     });
     expect(carlos.compensacoes.map((c) => c.tipo)).not.toContain('desconto de retorno de 20%');
+
+    // O pacote dele é o da seção 3.3 da spec: reembolso da viagem que ficou em
+    // aberto e remarcação sem taxa, os dois fora do teto. Crédito na conta, não.
+    expect(carlos.compensacoes.map((c) => c.tipo)).toEqual([
+      'reembolso da viagem anterior',
+      'remarcação sem taxa',
+    ]);
+    expect(carlos.compensacoes.every((c) => c.foraDoTeto)).toBe(true);
 
     // E não alcança quem nunca foi ferido pela operação: a Mariana, do grupo 1,
     // não recebe convite nenhum na quebra, e por isso não tem o que barrar.
@@ -85,7 +110,28 @@ describe('motor de regras', () => {
     expect(mariana.regrasBloqueadas).toHaveLength(0);
 
     const resumo = resumoDaOcorrencia(quebra, v01, PASSAGEIROS);
-    expect(resumo.bloqueiosPorMotivo['B1']).toBe(1); // o número "1 barrada por freio"
+    expect(resumo.bloqueiosPorMotivo['B4']).toBe(1); // o número "1 barrada por freio"
+  });
+
+  it('a compensação só entra no custo depois do envio confirmado', () => {
+    // Enquanto ninguém clica em Confirmar envio, a mensagem não saiu e o
+    // benefício não foi concedido: ele aparece como pendente, não como custo.
+    const semConfirmar = resumoDaOcorrencia(quebra, v01, PASSAGEIROS);
+    expect(semConfirmar.custoCompensacoes).toBe(0);
+    expect(semConfirmar.custoDisparos).toBe(0);
+    expect(semConfirmar.custoCompensacoesPendentes).toBeGreaterThan(0);
+    expect(semConfirmar.enviosConfirmados).toBe(0);
+
+    const comMariana = resumoDaOcorrencia(quebra, v01, PASSAGEIROS, {}, { 'p-01': true });
+    expect(comMariana.custoCompensacoes).toBe(47); // só o crédito dela
+    expect(comMariana.enviosConfirmados).toBe(1);
+    expect(comMariana.custoCompensacoesPendentes).toBe(
+      semConfirmar.custoCompensacoesPendentes - 47,
+    );
+
+    // O teto, esse, continua sendo conferido sobre o que a regra decidiu: a
+    // conta precisa aparecer antes de gastar, não depois.
+    expect(semConfirmar.beneficioExtraPedido).toBe(comMariana.beneficioExtraPedido);
   });
 
   it('teto degrada só o benefício extra, começando pelo menos frequente', () => {
@@ -174,9 +220,10 @@ describe('win-back', () => {
     expect(helena.compensacoes).toHaveLength(0);
     expect(helena.regrasBloqueadas.map((b) => b.id)).toEqual(['B4']);
 
-    // Carlos, sem autorização, acumula os dois motivos para o mesmo convite.
+    // Carlos autoriza ser procurado, e mesmo assim o convite espera: é o caso
+    // aberto que o retém, sozinho — o mesmo motivo da Helena.
     const carlos = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
-    expect(carlos.regrasBloqueadas.map((b) => b.id)).toEqual(['B1', 'B4']);
+    expect(carlos.regrasBloqueadas.map((b) => b.id)).toEqual(['B4']);
   });
 });
 

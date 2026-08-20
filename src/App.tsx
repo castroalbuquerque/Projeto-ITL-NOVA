@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
 import { PASSAGEIROS, VIAGENS, passageiroPorId, type Viagem } from './dados';
 import { AVISO_DE_EXEMPLO, CASO_ABERTO_CARLOS, LOTE, resumoDoLote } from './dadosV2';
-import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
+import {
+  decidir,
+  resumoDaOcorrencia,
+  type Confirmados,
+  type Gatilho,
+  type Historico,
+} from './motor';
 import { Conversa, hora, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
 import { QuadroDeHonestidade } from './ui/Honestidade';
@@ -34,6 +40,8 @@ export default function App() {
   const [casoAberto, setCasoAberto] = useState<string | null>(null);
   const [loteAberto, setLoteAberto] = useState(false);
   const [loteAprovado, setLoteAprovado] = useState(false);
+  /** Envios confirmados, por `evento:passageiro:regra`, com a hora do clique. */
+  const [confirmados, setConfirmados] = useState<Record<string, string>>({});
   const [notas, setNotas] = useState<Record<string, number>>({});
 
   const viagem = VIAGENS.find((v) => v.id === viagemId)!;
@@ -99,13 +107,34 @@ export default function App() {
     [notas, ocorrenciaPorViagem],
   );
 
+  /** Quem teve pelo menos uma mensagem confirmada naquele evento. */
+  const envioConfirmado = (indiceDoEvento: number, passageiroId: string) =>
+    Object.keys(confirmados).some((k) => k.startsWith(`${indiceDoEvento}:${passageiroId}:`));
+
+  function confirmarEnvio(chave: string) {
+    const agora = new Date()
+      .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      .replace(':', 'h');
+    setConfirmados((atuais) => (atuais[chave] ? atuais : { ...atuais, [chave]: agora }));
+  }
+
   const ultimo = eventos[eventos.length - 1];
+  const confirmadosDoUltimo = useMemo<Confirmados>(() => {
+    const i = eventos.length - 1;
+    const m: Confirmados = {};
+    for (const chave of Object.keys(confirmados)) {
+      const [indice, passageiroId] = chave.split(':');
+      if (Number(indice) === i) m[passageiroId] = true;
+    }
+    return m;
+  }, [confirmados, eventos.length]);
   const resumo = ultimo
     ? resumoDaOcorrencia(
         ultimo.gatilho,
         ultimo.viagem,
         PASSAGEIROS,
         ultimo.gatilho.tipo === 'ocorrencia' ? historicoAntesDe(eventos, ultimo, viagemId) : {},
+        confirmadosDoUltimo,
       )
     : null;
 
@@ -245,6 +274,7 @@ export default function App() {
                   setNotas({});
                   setSelecionadoId(null);
                   setLoteAprovado(false);
+                  setConfirmados({});
                 }}
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:border-slate-800"
               >
@@ -272,6 +302,8 @@ export default function App() {
                 selecionadoId={selecionadoId}
                 aoSelecionar={setSelecionadoId}
                 modoIA={modoIA}
+                confirmados={confirmados}
+                aoConfirmar={confirmarEnvio}
               />
               {concluidas.map((id) => {
                 const v = VIAGENS.find((x) => x.id === id)!;
@@ -307,7 +339,12 @@ export default function App() {
               Com altura fixa ele transbordava por cima dos números da ocorrência
               assim que o lote aprovado e o bloco de redação entraram na tela. */}
           <div className="shrink-0">
-            <Inspetor eventos={eventos} selecionadoId={selecionadoId} modoIA={modoIA} />
+            <Inspetor
+              eventos={eventos}
+              selecionadoId={selecionadoId}
+              modoIA={modoIA}
+              envioConfirmado={envioConfirmado}
+            />
           </div>
           {doLote && (
             <div className="border-t border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">

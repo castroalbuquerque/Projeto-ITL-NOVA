@@ -64,9 +64,13 @@ export interface Resumo {
   pessoasAvisadas: number;
   semAvisoPorFaltaDeContato: number;
   bloqueiosPorMotivo: Record<string, number>;
+  /** Só o que teve envio confirmado por uma pessoa. */
   custoDisparos: number;
   custoCompensacoes: number;
   custoTotal: number;
+  /** Decidido pela regra e ainda esperando o clique de confirmação. */
+  custoCompensacoesPendentes: number;
+  enviosConfirmados: number;
   beneficioExtraPedido: number;
   beneficioExtraPago: number;
   cortesPorTeto: { nome: string; valor: number }[];
@@ -74,6 +78,13 @@ export interface Resumo {
 
 /** Mensagens já enviadas a cada passageiro nesta viagem. Governa o B2. */
 export type Historico = Record<string, number>;
+
+/**
+ * Quem já teve o envio confirmado por uma pessoa, nesta ocorrência. Enquanto o
+ * clique não vem, a mensagem não saiu e a compensação não foi concedida — então
+ * ela não entra no custo, e sim na conta do que está pendente.
+ */
+export type Confirmados = Record<string, boolean>;
 
 interface Contexto {
   gatilho: Gatilho;
@@ -133,10 +144,16 @@ export const REGRAS: Regra[] = [
     atrasoEnvioMinutos: 2,
     tom: 'reparador',
     aplica: ({ gatilho: g }) => ehOcorrencia(g, 'quebra'),
-    compensacoes: ({ viagem }) => [
-      { tipo: 'crédito de 30%', valorEstimado: credito(viagem, 0.3), foraDoTeto: false },
-      { tipo: 'remarcação livre', valorEstimado: 0, foraDoTeto: true },
-    ],
+    // Quem é do grupo 5 tem uma falha anterior sem solução: o pacote dele vem da
+    // R3b, com o reembolso pendente em vez de crédito na conta. Crédito e
+    // reembolso não se somam — é um ou outro (spec v2, seção 3.3).
+    compensacoes: ({ viagem, passageiro: p }) =>
+      p.grupo === 5
+        ? []
+        : [
+            { tipo: 'crédito de 30%', valorEstimado: credito(viagem, 0.3), foraDoTeto: false },
+            { tipo: 'remarcação livre', valorEstimado: 0, foraDoTeto: true },
+          ],
   },
   {
     id: 'R3',
@@ -157,7 +174,13 @@ export const REGRAS: Regra[] = [
     atrasoEnvioMinutos: 5,
     tom: 'reparador',
     aplica: ({ gatilho: g, passageiro: p }) => ehOcorrencia(g, 'quebra') && p.grupo === 5,
-    compensacoes: () => [], // idem regra 2
+    // Reembolso da viagem que ficou em aberto e remarcação sem taxa: os dois são
+    // direito de quem pagou por uma viagem que falhou, e por isso ficam fora do
+    // teto. É o pacote que a seção 3.3 da spec v2 trava para a mensagem dele.
+    compensacoes: ({ viagem }) => [
+      { tipo: 'reembolso da viagem anterior', valorEstimado: tarifa(viagem), foraDoTeto: true },
+      { tipo: 'remarcação sem taxa', valorEstimado: 0, foraDoTeto: true },
+    ],
   },
   {
     id: 'R4',
@@ -408,8 +431,10 @@ function avaliarPassageiro(ctx: Contexto, historico: Historico): Decisao {
     d.compensacoes.push(...regra.compensacoes(ctx));
   }
 
-  // Sem contato: a compensação só existe se houver como entregá-la ou anunciá-la.
-  if (!p.temContato) d.compensacoes = [];
+  // A compensação só existe se houver como entregá-la ou anunciá-la: sem contato,
+  // ou sem nenhuma mensagem que possa sair, ela não é concedida e não entra em
+  // custo nenhum. Vale para quem não tem caminho e para quem não autorizou.
+  if (!p.temContato || d.canais.length === 0) d.compensacoes = [];
 
   d.custoDisparo = Math.round(d.custoDisparo * 100) / 100;
   return d;
@@ -532,6 +557,7 @@ function avaliar(
   viagem: Viagem | null,
   passageiros: Passageiro[],
   historico: Historico = {},
+  confirmados: Confirmados = {},
 ): { decisoes: Decisao[]; resumo: Resumo } {
   const alvos = passageirosDoGatilho(gatilho, viagem, passageiros);
 
@@ -550,9 +576,16 @@ function avaliar(
     }
   }
 
-  const custoDisparos = decisoes.reduce((s, d) => s + d.custoDisparo, 0);
-  const custoCompensacoes = decisoes.reduce(
-    (s, d) => s + d.compensacoes.reduce((t, c) => t + c.valorEstimado, 0),
+  // Custo é o que foi efetivamente concedido: sem clique de confirmação, a
+  // mensagem não saiu e o benefício não foi entregue. O que a regra decidiu e
+  // ainda espera confirmação aparece à parte, como pendente.
+  const valorDe = (d: Decisao) => d.compensacoes.reduce((t, c) => t + c.valorEstimado, 0);
+  const enviada = (d: Decisao) => confirmados[d.passageiroId] === true;
+
+  const custoDisparos = decisoes.reduce((s, d) => s + (enviada(d) ? d.custoDisparo : 0), 0);
+  const custoCompensacoes = decisoes.reduce((s, d) => s + (enviada(d) ? valorDe(d) : 0), 0);
+  const custoCompensacoesPendentes = decisoes.reduce(
+    (s, d) => s + (enviada(d) ? 0 : valorDe(d)),
     0,
   );
 
@@ -566,6 +599,8 @@ function avaliar(
     custoDisparos: Math.round(custoDisparos * 100) / 100,
     custoCompensacoes,
     custoTotal: Math.round((custoDisparos + custoCompensacoes) * 100) / 100,
+    custoCompensacoesPendentes,
+    enviosConfirmados: decisoes.filter(enviada).length,
     beneficioExtraPedido: teto.pedido,
     beneficioExtraPago: teto.pago,
     cortesPorTeto: teto.cortes,
@@ -584,12 +619,19 @@ export function decidir(
   return avaliar(gatilho, viagem, passageiros, historico).decisoes;
 }
 
-/** Números da ocorrência: cobertura, custo, bloqueios e cortes pelo teto. */
+/**
+ * Números da ocorrência: cobertura, custo, bloqueios e cortes pelo teto.
+ *
+ * O teto continua sendo conferido sobre o que a regra decidiu conceder — é a
+ * conta que precisa aparecer antes de gastar, não depois. O custo, esse, só
+ * conta o que teve envio confirmado.
+ */
 export function resumoDaOcorrencia(
   gatilho: Gatilho,
   viagem: Viagem | null,
   passageiros: Passageiro[],
   historico: Historico = {},
+  confirmados: Confirmados = {},
 ): Resumo {
-  return avaliar(gatilho, viagem, passageiros, historico).resumo;
+  return avaliar(gatilho, viagem, passageiros, historico, confirmados).resumo;
 }

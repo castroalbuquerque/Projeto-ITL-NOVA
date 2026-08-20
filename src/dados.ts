@@ -88,6 +88,10 @@ export const PASSAGEIROS: Passageiro[] = [
   {
     // p.1 — só três viagens, a segunda terminou em quebra sem aviso, sumiu há seis meses.
     // A ocorrência aberta é a daquela viagem: nunca foi resolvida.
+    //
+    // Ele autoriza ser procurado: o que retém o convite comercial não é a falta de
+    // permissão, é o caso em aberto (B4). Enquanto a reclamação dele não for
+    // respondida, nenhuma oferta sai — resolver primeiro, vender depois.
     id: 'p-02',
     nome: 'Carlos',
     idade: 45,
@@ -98,7 +102,7 @@ export const PASSAGEIROS: Passageiro[] = [
     diasDesdeUltimaViagem: 180,
     compraEm: 'site',
     temContato: true,
-    consentimentoMarketing: false,
+    consentimentoMarketing: true,
     ocorrenciasAbertas: 1,
     passagensNaoUsadas: 0,
     gastoEmAlta: false,
@@ -274,10 +278,11 @@ export const PASSAGEIROS: Passageiro[] = [
     linhaHabitual: 'Capital–Interior',
   },
   {
-    // Sumiu depois de uma falha, como o Carlos, mas com autorização dada.
-    // É ela que mostra o convite comercial sendo adiado — e não barrado — pelo
-    // caso aberto: o Carlos tem os dois impedimentos ao mesmo tempo e não separa um
-    // do outro. A viagem dela foi cancelada sem realocação e o caso nunca fechou.
+    // Sumiu depois de uma falha, como o Carlos, e também com autorização dada.
+    // Os dois mostram o convite comercial sendo adiado — e não barrado — pelo caso
+    // aberto: quem separa o B1 do B4 na base é a Beatriz, que não autorizou e não
+    // deve nada a ninguém. A viagem da Helena foi cancelada sem realocação e o
+    // caso nunca fechou.
     id: 'p-12',
     nome: 'Helena',
     idade: 52,

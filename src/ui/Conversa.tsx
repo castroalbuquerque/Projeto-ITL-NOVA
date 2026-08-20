@@ -1,4 +1,5 @@
 import { MENSAGENS, NOVIDADES_POR_LINHA, passageiroPorId, type Viagem } from '../dados';
+import { hora, horarioRevisado, momentoDoEvento, somarMinutos } from '../horarios';
 import { motivoDeDescarte } from '../dadosV2';
 import { REGRAS, type Compensacao, type Decisao, type Gatilho } from '../motor';
 import { resolverRedacao } from '../redacao';
@@ -7,39 +8,9 @@ import { TextoEmStreaming } from './Streaming';
 
 // --- horários ---------------------------------------------------------------
 
-function somarMinutos(hhmm: string, minutos: number): string {
-  const [h, m] = hhmm.split(':').map(Number);
-  const total = (h * 60 + m + minutos + 24 * 60) % (24 * 60);
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
-}
-
-/** Horário para leitura humana: 23h50, não 23:50. */
-export function hora(hhmm: string): string {
-  return hhmm.replace(':', 'h');
-}
-
-/** Quando a ocorrência entra no sistema, em relação à partida. */
-const ANTECEDENCIA: Record<string, number> = {
-  atraso: 0,
-  quebra: -18,
-  mudanca_plataforma: -25,
-  cancelamento: -20,
-};
-
-export function momentoDoEvento(g: Gatilho, v: Viagem | null): string {
-  if (g.tipo !== 'ocorrencia' || !v) return '09:00'; // revisão mensal e marcos rodam de manhã
-  return somarMinutos(v.partida, ANTECEDENCIA[g.ocorrencia] ?? 0);
-}
-
-export function horarioRevisado(g: Gatilho, v: Viagem | null): string {
-  // Sem viagem não há horário revisado, e inventar um seria afirmar ao passageiro
-  // um fato que não existe em dado nenhum. Nenhuma mensagem sem viagem o usa.
-  if (!v) return '';
-  if (g.tipo !== 'ocorrencia') return v.partida;
-  if (g.ocorrencia === 'cancelamento') return v.proximaSaida;
-  if (g.ocorrencia === 'mudanca_plataforma') return v.partida;
-  return somarMinutos(v.partida, g.minutosImpacto);
-}
+// O cálculo mora em src/horarios.ts, fora da interface. Reexportado aqui porque
+// a conversa é onde o resto do protótipo sempre foi buscá-lo.
+export { hora, momentoDoEvento, horarioRevisado } from '../horarios';
 
 // --- texto ------------------------------------------------------------------
 
@@ -48,6 +19,8 @@ const FRASE_DA_COMPENSACAO: Record<string, string> = {
   'crédito de 20%': 'um crédito de 20% fica na sua conta pelo transtorno',
   'crédito de 30%': 'um crédito de 30% entra na sua conta hoje',
   'remarcação livre': 'a remarcação fica livre, sem taxa',
+  'remarcação sem taxa': 'a remarcação é sem taxa',
+  'reembolso da viagem anterior': 'o reembolso daquela viagem que quebrou já está liberado',
   'subida de classe por 30 dias': 'o assento de poltrona-cama sai pelo preço do executivo',
   'oferta dirigida de 25%': 'a próxima viagem sai com 25% de desconto até domingo',
   'desconto de retorno de 20%': 'a próxima viagem sai com 20% de desconto',
@@ -109,12 +82,17 @@ export function Conversa({
   selecionadoId,
   aoSelecionar,
   modoIA = false,
+  confirmados = {},
+  aoConfirmar,
 }: {
   eventos: Evento[];
   selecionadoId: string | null;
   aoSelecionar: (id: string) => void;
   /** Ligado, o texto vem do agente redator; desligado, do template da v1. */
   modoIA?: boolean;
+  /** Envios já confirmados, por `evento:passageiro:regra`, com a hora do clique. */
+  confirmados?: Record<string, string>;
+  aoConfirmar?: (chave: string) => void;
 }) {
   if (eventos.length === 0) {
     return (
@@ -144,7 +122,10 @@ export function Conversa({
                 key={d.passageiroId}
                 d={d}
                 e={e}
+                indiceDoEvento={i}
                 modoIA={modoIA}
+                confirmados={confirmados}
+                aoConfirmar={aoConfirmar}
                 selecionado={d.passageiroId === selecionadoId}
                 aoSelecionar={aoSelecionar}
               />
@@ -159,13 +140,19 @@ export function Conversa({
 function Bloco({
   d,
   e,
+  indiceDoEvento,
   modoIA,
+  confirmados,
+  aoConfirmar,
   selecionado,
   aoSelecionar,
 }: {
   d: Decisao;
   e: Evento;
+  indiceDoEvento: number;
   modoIA: boolean;
+  confirmados: Record<string, string>;
+  aoConfirmar?: (chave: string) => void;
   selecionado: boolean;
   aoSelecionar: (id: string) => void;
 }) {
@@ -195,6 +182,8 @@ function Bloco({
         const textoTemplate = d.chaveMensagem
           ? renderizar(d.chaveMensagem, d, e.gatilho, e.viagem)
           : '—';
+        const chave = `${indiceDoEvento}:${d.passageiroId}:${r.id}`;
+        const confirmado = confirmados[chave];
         const redacao = resolverRedacao({
           modoIA,
           gatilho: e.gatilho,
@@ -228,11 +217,12 @@ function Bloco({
                 redacao.texto
               )}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-slate-400">
+            <div className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-1 text-xs text-slate-400">
               <span>
                 {hora(horario)} · {r.canais.join(', ')} · {r.id}
                 {r.atrasoEnvioMinutos ? ` · ${r.atrasoEnvioMinutos} min após a ocorrência` : ''}
               </span>
+              {!ligacao && <Confirmacao chave={chave} confirmado={confirmado} aoConfirmar={aoConfirmar} />}
               {!ligacao && redacao.disponivel && (
                 <span
                   className={
@@ -281,5 +271,45 @@ function Bloco({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * A Trava 1 na mensagem: enquanto ninguém clica, o texto é rascunho e nada foi
+ * concedido — nem o benefício que ele anuncia. É o botão que transforma a
+ * decisão do motor em mensagem, e o custo em custo.
+ */
+function Confirmacao({
+  chave,
+  confirmado,
+  aoConfirmar,
+}: {
+  chave: string;
+  confirmado?: string;
+  aoConfirmar?: (chave: string) => void;
+}) {
+  if (!aoConfirmar) return null;
+  if (confirmado) {
+    return (
+      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800">
+        envio confirmado às {confirmado}
+      </span>
+    );
+  }
+  return (
+    <>
+      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
+        rascunho · nada saiu ainda
+      </span>
+      <button
+        onClick={(ev) => {
+          ev.stopPropagation();
+          aoConfirmar(chave);
+        }}
+        className="rounded border border-slate-800 px-2 py-0.5 text-slate-800 hover:bg-slate-800 hover:text-white"
+      >
+        Confirmar envio
+      </button>
+    </>
   );
 }
