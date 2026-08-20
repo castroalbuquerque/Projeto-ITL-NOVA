@@ -31,8 +31,17 @@ export function Metricas({ resumo, pessoas }: { resumo: Resumo; pessoas: number 
         <span className="text-slate-500">Custo dos disparos</span>
         <span className="text-right">{real(resumo.custoDisparos)}</span>
 
-        <span className="text-slate-500">Compensações</span>
+        <span className="text-slate-500">Compensações concedidas</span>
         <span className="text-right">{real(resumo.custoCompensacoes)}</span>
+
+        {resumo.custoCompensacoesPendentes > 0 && (
+          <>
+            <span className="text-amber-700">Pendentes de confirmação</span>
+            <span className="text-right text-amber-700">
+              {real(resumo.custoCompensacoesPendentes)}
+            </span>
+          </>
+        )}
 
         <span className="text-slate-500">Custo da ocorrência</span>
         <span className="text-right font-medium">{real(resumo.custoTotal)}</span>
@@ -46,6 +55,11 @@ export function Metricas({ resumo, pessoas }: { resumo: Resumo; pessoas: number 
         <div className="text-xs text-slate-600">
           ficaram sem aviso por falta de contato
         </div>
+      </div>
+
+      <div className="mt-1 text-xs text-slate-400">
+        custo conta o que teve envio confirmado; o teto é conferido sobre o que a regra decidiu,
+        antes de gastar
       </div>
 
       {bloqueios.length > 0 && (

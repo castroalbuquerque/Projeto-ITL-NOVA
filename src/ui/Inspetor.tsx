@@ -23,10 +23,13 @@ export function Inspetor({
   eventos,
   selecionadoId,
   modoIA = false,
+  envioConfirmado,
 }: {
   eventos: Evento[];
   selecionadoId: string | null;
   modoIA?: boolean;
+  /** Se o envio ao passageiro, naquele evento, já foi confirmado por alguém. */
+  envioConfirmado?: (indiceDoEvento: number, passageiroId: string) => boolean;
 }) {
   if (!selecionadoId) {
     return (
@@ -38,7 +41,7 @@ export function Inspetor({
 
   const p = passageiroPorId(selecionadoId);
   const linhas = eventos
-    .map((e) => ({ e, d: e.decisoes.find((x) => x.passageiroId === selecionadoId) }))
+    .map((e, i) => ({ e, i, d: e.decisoes.find((x) => x.passageiroId === selecionadoId) }))
     .filter((l) => l.d)
     .reverse();
 
@@ -71,7 +74,9 @@ export function Inspetor({
         </p>
       )}
 
-      {linhas.map(({ e, d }, i) => (
+      {linhas.map(({ e, i, d }) => {
+        const concedida = envioConfirmado ? envioConfirmado(i, selecionadoId) : true;
+        return (
         <section key={i} className="mt-4">
           <h3 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
             {rotuloDoGatilho(e.gatilho)}
@@ -118,18 +123,31 @@ export function Inspetor({
 
           {d!.compensacoes.length > 0 && (
             <div className="mt-2">
-              <div className="mb-1 text-xs text-slate-500">Compensação</div>
+              <div className="mb-1 text-xs text-slate-500">
+                Compensação
+                <span className={concedida ? 'text-emerald-700' : 'text-amber-700'}>
+                  {concedida ? ' · concedida' : ' · pendente de confirmação de envio'}
+                </span>
+              </div>
               <ul className="space-y-0.5 text-xs">
                 {d!.compensacoes.map((c, j) => (
                   <li key={j} className="flex justify-between gap-2">
-                    <span>
+                    <span className={concedida ? '' : 'text-slate-400'}>
                       {c.tipo}
                       {c.foraDoTeto && <span className="text-slate-400"> · fora do teto</span>}
                     </span>
-                    <span className="tabular-nums">R$ {c.valorEstimado}</span>
+                    <span className={`tabular-nums ${concedida ? '' : 'text-slate-400'}`}>
+                      R$ {c.valorEstimado}
+                    </span>
                   </li>
                 ))}
               </ul>
+              {!concedida && (
+                <div className="mt-0.5 text-xs text-slate-400">
+                  nada foi concedido e nada entrou no custo: falta o clique em Confirmar envio, na
+                  conversa
+                </div>
+              )}
             </div>
           )}
 
@@ -151,7 +169,8 @@ export function Inspetor({
             {d!.chaveMensagem && ` · ${d!.chaveMensagem}`}
           </div>
         </section>
-      ))}
+        );
+      })}
     </div>
   );
 }

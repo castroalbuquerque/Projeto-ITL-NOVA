@@ -19,7 +19,9 @@ describe('validador de fatos travados', () => {
     expect(linhaDeFatosValidados(v)).toBe('horário ✓ · valor ✓ · nome ✓ · canal ✓');
   });
 
-  it('aprova a redação do Carlos e confirma que o freio de permissão alcança o agente', () => {
+  it('aprova a redação do Carlos e confirma que o freio comercial alcança o agente', () => {
+    // A liberação comercial está travada no pacote de fatos — no Carlos, pelo
+    // caso em aberto — e o agente não pode destravá-la escrevendo.
     const v = validarRedacao(fatosCarlos, REDACOES_IA['p-02']);
     expect(v.valido).toBe(true);
     expect(fatosCarlos.ofertaComercialLiberada).toBe(false);

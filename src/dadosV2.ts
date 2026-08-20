@@ -63,7 +63,9 @@ export const PACOTES_DE_FATOS: Record<string, PacoteDeFatos> = {
       { rotulo: 'ligação de atendente', termos: ['atendente'] },
     ],
     canal: 'whatsapp',
-    ofertaComercialLiberada: false, // freio de permissão: nenhuma oferta de retorno
+    // Nenhuma oferta de retorno no texto: o freio que a retém é o caso aberto,
+    // e ele vale para a redação do agente como vale para o motor.
+    ofertaComercialLiberada: false,
     maximoDeFrases: 4,
   },
   'p-05': {
@@ -151,7 +153,11 @@ export const DOSSIE_CARLOS: LinhaDeDossie[] = [
   { campo: 'Histórico', valor: '3 viagens · 2ª terminou em quebra sem aviso · sem contato há 6 meses' },
   { campo: 'Gasto histórico', valor: 'R$ 612', exemplo: true },
   { campo: 'Reclamação anterior', valor: 'Aberta e não respondida — motivo da prioridade na fila', destaque: true },
-  { campo: 'Consentimento', valor: 'Aviso operacional: sim · Oferta comercial: não', destaque: true },
+  {
+    campo: 'Consentimento',
+    valor: 'Autorizou ser procurado · oferta retida pelo caso aberto',
+    destaque: true,
+  },
   {
     campo: 'Teto disponível (regra)',
     valor: 'Reembolso pendente + remarcação sem taxa + 1 cortesia até R$ 90',
@@ -168,8 +174,14 @@ export const PROPOSTA_CARLOS = {
     'Carlos, meu nome é [Atendente] e estou com o seu caso em mãos. Em [mês], o seu ônibus quebrou na estrada e você ficou sem qualquer aviso nosso — e depois ainda registrou uma reclamação que nunca foi respondida. Isso foi uma falha nossa, duas vezes. Quero corrigir o que der: seu reembolso daquela viagem está liberado agora, e se você decidir nos dar outra chance, a próxima remarcação é sem taxa e sem burocracia, direto comigo neste número. Sem robô, sem fila.',
 };
 
+/**
+ * A spec (seção 4.2) escreve esta nota com o consentimento como motivo. Na base
+ * do protótipo o Carlos autoriza ser procurado, e o que retém a oferta é a
+ * reclamação em aberto — o motivo escrito aqui é o que o motor de fato aplica
+ * (B4), para a nota não afirmar na tela algo que a decisão não sustenta.
+ */
 export const NOTA_DE_GUARDRAIL_CARLOS =
-  'Oferta comercial (desconto de retorno) omitida — cliente não autorizou comunicação de oferta. Se o cliente responder, o consentimento pode ser coletado na conversa.';
+  'Oferta comercial (desconto de retorno) omitida — há reclamação em aberto, e convite comercial só depois de resolvê-la. Resolvido o caso, a oferta pode entrar na conversa.';
 
 /** O caso já está na fila antes de qualquer pesquisa: a reclamação nunca respondida. */
 export const CASO_ABERTO_CARLOS = {
@@ -233,7 +245,7 @@ export const LOTE: PainelDoLote = {
     {
       rotulo: 'Mensagens barradas por freio',
       valor: '1',
-      detalhe: 'oferta ao Carlos — sem consentimento',
+      detalhe: 'oferta de retorno ao Carlos — reclamação em aberto',
     },
     {
       rotulo: 'Redações descartadas pelo validador → template',
@@ -303,10 +315,14 @@ export function resumoDoLote(lote: PainelDoLote = LOTE): { resumo: Resumo; pesso
       pessoasAlcancaveis: lote.comContato,
       pessoasAvisadas: lote.comContato,
       semAvisoPorFaltaDeContato: lote.semContato,
-      bloqueiosPorMotivo: { B0: lote.semContato, B1: lote.barradasPorFreio },
+      bloqueiosPorMotivo: { B0: lote.semContato, B4: lote.barradasPorFreio },
       custoDisparos,
       custoCompensacoes: lote.custoCompensacao,
       custoTotal: Math.round((custoDisparos + lote.custoCompensacao) * 100) / 100,
+      // Aprovar o lote é o clique de confirmação, em escala: depois dele não há
+      // mais nada pendente nesta ocorrência.
+      custoCompensacoesPendentes: 0,
+      enviosConfirmados: lote.comContato,
       beneficioExtraPedido: lote.custoCompensacao,
       beneficioExtraPago: lote.custoCompensacao,
       cortesPorTeto: [],
