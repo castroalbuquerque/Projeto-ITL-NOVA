@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PASSAGEIROS, passageiroPorId, viagemPorId } from './dados';
-import { decidir, resumoDaOcorrencia, type Gatilho } from './motor';
+import { decidir, ordemDeCorte, resumoDaOcorrencia, type Gatilho } from './motor';
 
 const v01 = viagemPorId('v-01'); // quebra: Mariana e Carlos
 const v02 = viagemPorId('v-02'); // cancelamento: Ana Paula, Beatriz, Diego + 39 de fundo
@@ -154,5 +154,29 @@ describe('win-back', () => {
     // Carlos, sem autorização, acumula os dois motivos para o mesmo convite.
     const carlos = por(decidir({ tipo: 'winback', passageiroId: 'p-02' }, null, PASSAGEIROS), 'p-02');
     expect(carlos.regrasBloqueadas.map((b) => b.id)).toEqual(['B1', 'B4']);
+  });
+});
+
+// A ordem de corte é usada também pelo painel do lote da v2 (seção 5.3): quem
+// corta é o motor, não o agente.
+describe('ordem de corte do teto', () => {
+  it('corta do menos frequente para o mais, até caber no teto', () => {
+    const { pedido, pago, cortes } = ordemDeCorte(
+      [
+        { nome: 'quem viaja sempre', frequencia: 80, valor: 600 },
+        { nome: 'quem viaja às vezes', frequencia: 20, valor: 600 },
+        { nome: 'quem viaja pouco', frequencia: 2, valor: 600 },
+      ],
+      1000,
+    );
+    expect(pedido).toBe(1800);
+    expect(cortes.map((c) => c.nome)).toEqual(['quem viaja pouco', 'quem viaja às vezes']);
+    expect(pago).toBe(600);
+  });
+
+  it('não corta nada quando o pedido cabe no teto', () => {
+    const r = ordemDeCorte([{ nome: 'alguém', frequencia: 1, valor: 100 }], 2000);
+    expect(r.cortes).toHaveLength(0);
+    expect(r.pago).toBe(100);
   });
 });

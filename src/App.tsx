@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
 import { PASSAGEIROS, VIAGENS, passageiroPorId, type Viagem } from './dados';
+import { AVISO_DE_EXEMPLO, CASO_ABERTO_CARLOS, LOTE, resumoDoLote } from './dadosV2';
 import { decidir, resumoDaOcorrencia, type Gatilho, type Historico } from './motor';
 import { Conversa, hora, rotuloDoGatilho, type Evento } from './ui/Conversa';
 import { Etiqueta } from './ui/Etiqueta';
+import { QuadroDeHonestidade } from './ui/Honestidade';
 import { Inspetor } from './ui/Inspetor';
 import { Metricas } from './ui/Metricas';
-import { FilaDeCasos, Pesquisa, casosDe } from './ui/PosViagem';
+import { Copiloto } from './ui/Copiloto';
+import { PainelDoLote } from './ui/Lote';
+import { FilaDeCasos, Pesquisa, casosDe, type Caso } from './ui/PosViagem';
 
 const OCORRENCIAS = [
   { id: 'atraso', rotulo: 'Atraso longo', minutos: 80 },
@@ -26,6 +30,10 @@ export default function App() {
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const [alvoId, setAlvoId] = useState<string>('p-09');
   const [concluidas, setConcluidas] = useState<string[]>([]);
+  const [modoIA, setModoIA] = useState(false);
+  const [casoAberto, setCasoAberto] = useState<string | null>(null);
+  const [loteAberto, setLoteAberto] = useState(false);
+  const [loteAprovado, setLoteAprovado] = useState(false);
   const [notas, setNotas] = useState<Record<string, number>>({});
 
   const viagem = VIAGENS.find((v) => v.id === viagemId)!;
@@ -72,7 +80,24 @@ export default function App() {
     return m;
   }, [eventos]);
 
-  const casos = useMemo(() => casosDe(notas, ocorrenciaPorViagem), [notas, ocorrenciaPorViagem]);
+  /**
+   * A reclamação do Carlos, aberta há seis meses e nunca respondida, já está na
+   * fila antes de qualquer pesquisa: é a regra da v1 de que caso antigo sem
+   * solução fura a fila (seção 4.3 da spec v2).
+   */
+  const casos = useMemo<Caso[]>(
+    () => [
+      {
+        passageiroId: CASO_ABERTO_CARLOS.passageiroId,
+        titulo: CASO_ABERTO_CARLOS.titulo,
+        ocorrencia: CASO_ABERTO_CARLOS.ocorrencia,
+        prazoHoras: CASO_ABERTO_CARLOS.prazoHoras,
+        prioridade: CASO_ABERTO_CARLOS.prioridade,
+      },
+      ...casosDe(notas, ocorrenciaPorViagem),
+    ],
+    [notas, ocorrenciaPorViagem],
+  );
 
   const ultimo = eventos[eventos.length - 1];
   const resumo = ultimo
@@ -84,12 +109,21 @@ export default function App() {
       )
     : null;
 
+  // Lote aprovado alimenta a tela de números da v1 com os números do lote.
+  const doLote = loteAprovado ? resumoDoLote() : null;
+  const resumoNaTela = doLote?.resumo ?? resumo;
+  const pessoasNaTela = doLote?.pessoas ?? ultimo?.decisoes.length ?? 0;
+
   return (
     <div className="flex h-screen flex-col bg-slate-100 text-slate-800">
-      <header className="flex items-baseline gap-3 border-b border-slate-300 bg-white px-4 py-2">
+      <header className="flex flex-wrap items-baseline gap-3 border-b border-slate-300 bg-white px-4 py-2">
         <h1 className="font-semibold">Central de Transparência</h1>
         <span className="text-xs text-slate-500">
-          protótipo · dados inventados · nenhuma mensagem é enviada de fato
+          protótipo · dados inventados · nenhuma mensagem é enviada de fato · textos de IA gerados
+          antes da apresentação
+        </span>
+        <span className="ml-auto">
+          <QuadroDeHonestidade />
         </span>
       </header>
 
@@ -136,6 +170,22 @@ export default function App() {
                 </button>
               ))}
             </div>
+          </section>
+
+          <section className="border-t border-slate-200 px-4 py-3">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Orquestrador (v2)
+            </h2>
+            <button
+              onClick={() => {
+                setLoteAberto(true);
+                setCasoAberto(null);
+              }}
+              className="w-full rounded border border-slate-200 px-2 py-1.5 text-left text-xs hover:border-slate-800 hover:bg-slate-50"
+            >
+              Painel do lote
+              <span className="text-slate-400"> · {LOTE.passageiros} passageiros</span>
+            </button>
           </section>
 
           <section className="border-t border-slate-200 px-4 py-3">
@@ -194,6 +244,7 @@ export default function App() {
                   setConcluidas([]);
                   setNotas({});
                   setSelecionadoId(null);
+                  setLoteAprovado(false);
                 }}
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:border-slate-800"
               >
@@ -205,25 +256,39 @@ export default function App() {
 
         {/* ---------- conversa ---------- */}
         <main className="min-h-0 overflow-y-auto bg-slate-50">
-          <Conversa
-            eventos={eventos}
-            selecionadoId={selecionadoId}
-            aoSelecionar={setSelecionadoId}
-          />
-          {concluidas.map((id) => {
-            const v = VIAGENS.find((x) => x.id === id)!;
-            return (
-              <Pesquisa
-                key={id}
-                viagem={v}
-                alvos={v.passageiroIds.map(passageiroPorId)}
-                notas={notas}
-                aoResponder={(passageiroId, nota) =>
-                  setNotas((atuais) => ({ ...atuais, [`${id}:${passageiroId}`]: nota }))
-                }
+          {loteAberto ? (
+            <PainelDoLote
+              aprovado={loteAprovado}
+              aoAprovar={() => setLoteAprovado(true)}
+              aoFechar={() => setLoteAberto(false)}
+            />
+          ) : casoAberto ? (
+            <Copiloto passageiroId={casoAberto} aoFechar={() => setCasoAberto(null)} />
+          ) : (
+            <>
+              <SeletorDeRedacao modoIA={modoIA} aoTrocar={setModoIA} />
+              <Conversa
+                eventos={eventos}
+                selecionadoId={selecionadoId}
+                aoSelecionar={setSelecionadoId}
+                modoIA={modoIA}
               />
-            );
-          })}
+              {concluidas.map((id) => {
+                const v = VIAGENS.find((x) => x.id === id)!;
+                return (
+                  <Pesquisa
+                    key={id}
+                    viagem={v}
+                    alvos={v.passageiroIds.map(passageiroPorId)}
+                    notas={notas}
+                    aoResponder={(passageiroId, nota) =>
+                      setNotas((atuais) => ({ ...atuais, [`${id}:${passageiroId}`]: nota }))
+                    }
+                  />
+                );
+              })}
+            </>
+          )}
         </main>
 
         {/* ---------- inspetor e números ---------- */}
@@ -239,12 +304,61 @@ export default function App() {
             )}
           </div>
           <div className="min-h-0 flex-1">
-            <Inspetor eventos={eventos} selecionadoId={selecionadoId} />
+            <Inspetor eventos={eventos} selecionadoId={selecionadoId} modoIA={modoIA} />
           </div>
-          {resumo && ultimo && <Metricas resumo={resumo} pessoas={ultimo.decisoes.length} />}
-          <FilaDeCasos casos={casos} />
+          {doLote && (
+            <div className="border-t border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+              Preenchida pelo lote aprovado no orquestrador · {LOTE.redacoesDescartadas} redação
+              descartada pelo validador virou template · {AVISO_DE_EXEMPLO}
+            </div>
+          )}
+          {resumoNaTela && <Metricas resumo={resumoNaTela} pessoas={pessoasNaTela} />}
+          <FilaDeCasos casos={casos} aoAbrir={setCasoAberto} />
         </aside>
       </div>
+    </div>
+  );
+}
+
+/** Toggle da seção 3.2: a mesma ocorrência, escrita pelo template ou pelo agente. */
+function SeletorDeRedacao({
+  modoIA,
+  aoTrocar,
+}: {
+  modoIA: boolean;
+  aoTrocar: (v: boolean) => void;
+}) {
+  const opcoes = [
+    { ia: false, rotulo: 'Template (v1)' },
+    { ia: true, rotulo: 'Redação por IA (v2)' },
+  ];
+  return (
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-slate-200 bg-white/95 px-4 py-2 backdrop-blur">
+      <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+        Quem escreve
+      </span>
+      <div className="flex overflow-hidden rounded border border-slate-300">
+        {opcoes.map((o) => (
+          <button
+            key={o.rotulo}
+            onClick={() => aoTrocar(o.ia)}
+            className={`px-2.5 py-1 text-xs ${
+              o.ia === modoIA
+                ? o.ia
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-slate-800 text-white'
+                : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {o.rotulo}
+          </button>
+        ))}
+      </div>
+      <span className="text-xs text-slate-400">
+        {modoIA
+          ? 'texto gerado por IA antes da apresentação e embutido aqui; o efeito de digitação é reproduzido'
+          : 'texto dos modelos escritos à mão na v1'}
+      </span>
     </div>
   );
 }

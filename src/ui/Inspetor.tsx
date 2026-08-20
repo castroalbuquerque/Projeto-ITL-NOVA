@@ -1,6 +1,9 @@
 import { passageiroPorId } from '../dados';
+import { ROTULO_DE_REDACAO_IA, ROTULO_DE_TEMPLATE, motivoDeDescarte } from '../dadosV2';
 import { REGRAS } from '../motor';
-import { rotuloDoGatilho, type Evento } from './Conversa';
+import { resolverRedacao, type Resolucao } from '../redacao';
+import { linhaDeFatosValidados } from '../validador';
+import { renderizar, rotuloDoGatilho, type Evento } from './Conversa';
 import { Etiqueta } from './Etiqueta';
 
 const NOME_DO_BLOQUEIO: Record<string, string> = {
@@ -19,9 +22,11 @@ const NOME_DO_BLOQUEIO: Record<string, string> = {
 export function Inspetor({
   eventos,
   selecionadoId,
+  modoIA = false,
 }: {
   eventos: Evento[];
   selecionadoId: string | null;
+  modoIA?: boolean;
 }) {
   if (!selecionadoId) {
     return (
@@ -128,6 +133,18 @@ export function Inspetor({
             </div>
           )}
 
+          <BlocoDeRedacao
+            resolucao={resolverRedacao({
+              modoIA,
+              gatilho: e.gatilho,
+              passageiroId: d!.passageiroId,
+              canal: 'whatsapp',
+              textoTemplate: d!.chaveMensagem
+                ? renderizar(d!.chaveMensagem, d!, e.gatilho, e.viagem)
+                : '',
+            })}
+          />
+
           <div className="mt-2 text-xs text-slate-400">
             disparo: R$ {d!.custoDisparo.toFixed(2)}
             {d!.tom && ` · tom ${d!.tom}`}
@@ -135,6 +152,52 @@ export function Inspetor({
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Bloco novo do canhoto (seção 3.2): quem escreveu a mensagem e o que o
+ * validador conferiu — ou, no descarte, o motivo em texto legível.
+ */
+function BlocoDeRedacao({ resolucao }: { resolucao: Resolucao }) {
+  if (!resolucao.disponivel) return null;
+
+  const naoBloqueantes = (resolucao.veredito?.checagens ?? []).filter(
+    (c) => !c.bloqueante && !c.ok,
+  );
+
+  return (
+    <div className="mt-2">
+      <div className="mb-1 text-xs text-slate-500">Redação</div>
+      {resolucao.descartada ? (
+        <div className="border-l-2 border-red-400 pl-2 text-xs">
+          <div className="text-red-700">{motivoDeDescarte(resolucao.descartada.motivo)}</div>
+          <div className="mt-0.5 text-slate-500">
+            Fatos conferidos: {linhaDeFatosValidados(resolucao.veredito!)}
+          </div>
+        </div>
+      ) : resolucao.origem === 'ia' ? (
+        <div className="border-l-2 border-violet-500 pl-2 text-xs">
+          <div className="font-medium">{ROTULO_DE_REDACAO_IA}</div>
+          <div className="text-slate-600">
+            Fatos validados: {linhaDeFatosValidados(resolucao.veredito!)}
+          </div>
+          {naoBloqueantes.map((c) => (
+            <div key={c.campo} className="text-slate-400">
+              {c.rotulo}: {c.detalhe} · registrado, não bloqueia
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="border-l-2 border-slate-300 pl-2 text-xs">
+          <div className="font-medium text-slate-600">{ROTULO_DE_TEMPLATE}</div>
+          <div className="text-slate-400">
+            há redação de IA pré-computada para esta mensagem; o topo da conversa está em
+            Template (v1)
+          </div>
+        </div>
+      )}
     </div>
   );
 }
