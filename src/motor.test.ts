@@ -65,6 +65,29 @@ describe('motor de regras', () => {
     expect(winback.compensacoes).toHaveLength(0);
   });
 
+  it('na ocorrência, o aviso da viagem passa e a oferta de retorno é barrada', () => {
+    // O que a demonstração precisa mostrar no canhoto do Carlos: o aviso da
+    // viagem que ele pagou sai, e o convite comercial que a regra quis fazer
+    // junto aparece barrado, com o motivo escrito.
+    const carlos = por(decidir(quebra, v01, PASSAGEIROS), 'p-02');
+    expect(carlos.enviar).toBe(true);
+    expect(carlos.regrasAplicadas).toContain('R2');
+    expect(carlos.regrasAplicadas).not.toContain('R9');
+    expect(carlos.regrasBloqueadas).toContainEqual({
+      id: 'B1',
+      motivo: 'R9: sem autorização para mensagem comercial',
+    });
+    expect(carlos.compensacoes.map((c) => c.tipo)).not.toContain('desconto de retorno de 20%');
+
+    // E não alcança quem nunca foi ferido pela operação: a Mariana, do grupo 1,
+    // não recebe convite nenhum na quebra, e por isso não tem o que barrar.
+    const mariana = por(decidir(quebra, v01, PASSAGEIROS), 'p-01');
+    expect(mariana.regrasBloqueadas).toHaveLength(0);
+
+    const resumo = resumoDaOcorrencia(quebra, v01, PASSAGEIROS);
+    expect(resumo.bloqueiosPorMotivo['B1']).toBe(1); // o número "1 barrada por freio"
+  });
+
   it('teto degrada só o benefício extra, começando pelo menos frequente', () => {
     const decisoes = decidir(cancelamento, v02, PASSAGEIROS);
     const extras = (id: string) =>
