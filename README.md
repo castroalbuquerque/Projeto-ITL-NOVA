@@ -123,9 +123,16 @@ vite.config.pacote.ts    build de um pedaço só de JS e CSS, para o empacotador
 | R6b | win-back | sem viajar há > 120 dias **e** caso aberto | whatsapp | — | reparador | nenhuma: primeiro resolve |
 | R7 | marco | 5 viagens em 4 meses **e** gasto em alta **e** grupo ≠ 1 | whatsapp | 24 h | informativo | subida de classe por 30 dias |
 | R8 | padrão | 3 passagens não usadas em 6 meses | **nenhum** | — | — | nenhuma |
+| R9 | ocorrência | passageiro do grupo 5, junto ao aviso | whatsapp | 60 min | reconquista | desconto de retorno de 20% |
 
 A R8 é a mais importante do conjunto e não envia nada: registra o padrão e abre caso de
 investigação. Existe para provar que o motor sabe decidir não agir.
+
+A R9 é comercial de propósito. Quem já foi ferido pela operação é justamente quem a empresa mais
+quer reconquistar, e a regra tenta fazer isso na hora da falha — mas o convite passa pelos mesmos
+freios de sempre. No Carlos ele é barrado duas vezes, por falta de autorização (B1) e por haver caso
+aberto (B4), enquanto o aviso da viagem que ele pagou sai normalmente. É essa a linha que o canhoto
+mostra lado a lado: o que passa e o que não passa, para a mesma pessoa, no mesmo instante.
 
 ### Os bloqueios, nesta ordem
 
@@ -157,8 +164,11 @@ passos 1 a 5 e o 11 — são eles que sustentam o argumento inteiro.
    *Capital–Interior*, botão *Quebra de veículo*. Mariana e Carlos são avisados de formas
    diferentes na mesma falha: ela no tom reparador, com crédito de 30%; ele no de reconquista, que
    reconhece a viagem anterior sem aviso. Clique em cada um e leia o canhoto à direita: a ligação
-   dela sai em 10 minutos pela R3, a dele em 5 pela R3b. É a v1 inteira em um clique — o motor
-   decide, a conversa é só a evidência.
+   dela sai em 10 minutos pela R3, a dele em 5 pela R3b. E, no canhoto do Carlos, **a oferta de
+   retorno aparece barrada**, com o motivo escrito — sem autorização (B1) e com caso aberto (B4) —
+   enquanto o aviso da viagem que ele pagou sai normalmente. É a v1 inteira em um clique: o motor
+   decide, a conversa é só a evidência. Guarde a linha barrada: ela volta em F2, como nota de
+   guardrail, e em F3, como o número "1 barrada por freio".
 2. **A mesma quebra, escrita por IA** (~45 s). No topo da conversa, o seletor *quem escreve* está
    em *Template (v1)*: os textos escritos à mão. Troque para *Redação por IA (v2)*: os mesmos
    Mariana e Carlos, agora com o texto do agente entrando palavra a palavra. Clique em cada um e

@@ -230,6 +230,23 @@ export const REGRAS: Regra[] = [
     ],
   },
   {
+    // O convite de retorno também é avaliado na hora da ocorrência, e não só na
+    // revisão mensal de sumidos: é quando a empresa mais quer reconquistar quem
+    // já foi ferido por ela. Sendo comercial, passa pelos mesmos freios — e é
+    // aqui que o Carlos mostra a oferta barrada com o motivo escrito, no mesmo
+    // canhoto em que o aviso da viagem dele passa (spec v2, seções 3.3 e 5.2).
+    id: 'R9',
+    descricao: 'Convite de retorno a quem já sofreu falha nossa (grupo 5), junto ao aviso',
+    comercial: true,
+    canais: ['whatsapp'],
+    atrasoEnvioMinutos: 60,
+    tom: 'reconquista',
+    aplica: ({ gatilho: g, passageiro: p }) => g.tipo === 'ocorrencia' && p.grupo === 5,
+    compensacoes: ({ viagem }) => [
+      { tipo: 'desconto de retorno de 20%', valorEstimado: credito(viagem, 0.2), foraDoTeto: false },
+    ],
+  },
+  {
     id: 'R8',
     descricao: 'Padrão: 3 passagens compradas e não usadas em 6 meses',
     comercial: false,

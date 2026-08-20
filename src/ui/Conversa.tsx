@@ -50,6 +50,7 @@ const FRASE_DA_COMPENSACAO: Record<string, string> = {
   'remarcação livre': 'a remarcação fica livre, sem taxa',
   'subida de classe por 30 dias': 'o assento de poltrona-cama sai pelo preço do executivo',
   'oferta dirigida de 25%': 'a próxima viagem sai com 25% de desconto até domingo',
+  'desconto de retorno de 20%': 'a próxima viagem sai com 20% de desconto',
 };
 
 /** Reembolso e lugar não entram aqui: o corpo da mensagem já os anuncia. */
