@@ -2,10 +2,29 @@
 
 **Projeto:** Estratégia de Retenção e Experiência do Cliente · Transporte Rodoviário Interestadual (Grupo 1)
 **Documento-base:** Protótipo "Central de Transparência" (fluxocentraltransparencia_1.pdf) · Deck de Segmentação · Relatório de Clusterização
-**Versão:** 2.0 — rascunho para implementação
-**Data:** 19/08/2026
+**Versão:** 2.1 — revisada depois da implementação
+**Data:** 20/08/2026 (2.0 em 19/08/2026)
 
 ---
+
+## 0. O que mudou da 2.0 para a 2.1
+
+A 2.0 foi escrita antes do código. Implementada, ela discordou do protótipo em dois pontos, e
+quem estava errado era o documento — estas correções alinham a spec ao que o motor de regras
+decide de fato, que é a autoridade do projeto.
+
+1. **O que retém a oferta ao Carlos.** A 2.0 dizia que a oferta de retorno era barrada por falta
+   de consentimento. Na base do exercício ele autoriza ser procurado, e o que retém o convite é a
+   reclamação em aberto: convite comercial só depois de resolver o que se deve. Seções 3.3, 4.2 e
+   5.2 corrigidas. Quem separa consentimento de dívida na base é a Beatriz, barrada só pela falta
+   de autorização.
+2. **A confirmação de envio.** A 2.0 não descrevia o gesto que transforma uma decisão em mensagem.
+   Toda mensagem nasce como rascunho e só sai depois de um clique, e a compensação só conta como
+   concedida — e como custo — depois dele. Seção 3.5, nova.
+
+A cena do freio continua na demonstração, com o motivo trocado: em vez de "não posso falar com
+você", o sistema diz "não vou te vender nada enquanto te devo uma resposta". O argumento fica mais
+forte, não mais fraco.
 
 ## 1. Objetivo
 
@@ -55,7 +74,7 @@ Antes da exibição, um **validador programático** confere se todos os fatos tr
 
 > Bom dia, Mariana. O ônibus das 06h30 teve uma falha mecânica e já estamos trocando o veículo — a nova saída é às 07h15, mesma plataforma. Seu assento de sempre está garantido, e como você viaja com a gente toda quinzena, um crédito de 30% já foi para a sua conta, sem precisar pedir. Se preferir remarcar, é sem taxa e sem fila: basta responder esta mensagem.
 
-**Mensagem 2 — Carlos (Grupo Feridos pela Operação · sem consentimento para ofertas · compensação decidida pela regra: reembolso integral + remarcação sem taxa + ligação de atendente; oferta de retorno BARRADA pelo freio de permissão):**
+**Mensagem 2 — Carlos (Grupo Feridos pela Operação · autoriza ser procurado · compensação decidida pela regra: reembolso da viagem que ficou em aberto + remarcação sem taxa + ligação de atendente, os três fora do teto; oferta de retorno BARRADA pelo freio de caso aberto):**
 
 > Carlos, aqui é a [Empresa]. O veículo das 06h30 teve falha mecânica e a nova saída é às 07h15. Sabemos que na sua última viagem conosco você ficou sem nenhuma informação numa situação como esta — e isso não vai se repetir. Seu reembolso integral já está disponível, a remarcação é sem taxa, e um atendente com o seu histórico em mãos vai ligar em até cinco minutos. Você não vai precisar explicar nada duas vezes.
 
@@ -70,6 +89,25 @@ Canhoto: `Redação por IA descartada — horário divergente do fato travado (0
 ### 3.4 Prompt de geração (registrado no repositório, não exibido na demo)
 
 O prompt usado na pré-computação deve ser versionado junto desta spec, contendo: papel do agente, pacote de fatos travados em JSON, instruções de tom por segmento (Âncora: reconhecimento de frequência; Feridos: reconhecimento explícito da falha anterior, sem oferta comercial), proibição de inventar fatos, limite de tamanho (máx. 4 frases).
+
+### 3.5 Confirmação de envio e o momento em que a compensação existe
+
+Nenhuma mensagem sai sozinha, nem no modo template nem no modo IA. Cada mensagem aparece na
+conversa marcada como **rascunho**, com um botão `Confirmar envio` ao lado. É a Trava 1 aplicada à
+mensagem, do mesmo jeito que os três botões do copiloto (F2) e o `Aprovar lote` (F3) a aplicam ao
+caso e ao lote.
+
+O clique não muda só o rótulo: enquanto ele não vem, **a compensação não foi concedida**. O canhoto
+a mostra como *pendente de confirmação de envio*, e ela não entra no custo da ocorrência — os
+números separam *compensações concedidas* de *pendentes*. Confirmado o envio, o valor entra.
+
+O teto é a exceção deliberada: continua sendo conferido sobre o que a regra **decidiu** conceder,
+antes de qualquer clique. A conta contra o limite precisa aparecer antes de gastar, não depois — é
+para isso que ela serve.
+
+Uma consequência para quem apresenta: a tela abre com custo zero e tudo pendente. Isso é o
+argumento, não um defeito — nada existe para o passageiro, nem a conta, antes de uma pessoa
+apertar o botão.
 
 ---
 
@@ -94,14 +132,14 @@ Ao abrir um caso da fila (Grupo Feridos, 418 clientes — tratamento caso a caso
 | Histórico | 3 viagens · 2ª terminou em quebra sem aviso · sem contato há 6 meses |
 | Gasto histórico | R$ 612 (exemplo) |
 | Reclamação anterior | Aberta e **não respondida** — motivo da prioridade na fila |
-| Consentimento | Aviso operacional: sim · Oferta comercial: **não** |
+| Consentimento | Autorizou ser procurado · oferta **retida pelo caso aberto**, não pela permissão |
 | Teto disponível (regra) | Reembolso pendente + remarcação sem taxa + 1 cortesia até R$ 90 (exemplo) |
 
 **Proposta do copiloto (texto pré-computado, aguardando aprovação):**
 
 > Carlos, meu nome é [Atendente] e estou com o seu caso em mãos. Em [mês], o seu ônibus quebrou na estrada e você ficou sem qualquer aviso nosso — e depois ainda registrou uma reclamação que nunca foi respondida. Isso foi uma falha nossa, duas vezes. Quero corrigir o que der: seu reembolso daquela viagem está liberado agora, e se você decidir nos dar outra chance, a próxima remarcação é sem taxa e sem burocracia, direto comigo neste número. Sem robô, sem fila.
 
-**Nota de guardrail exibida no painel:** `Oferta comercial (desconto de retorno) omitida — cliente não autorizou comunicação de oferta. Se o cliente responder, o consentimento pode ser coletado na conversa.`
+**Nota de guardrail exibida no painel:** `Oferta comercial (desconto de retorno) omitida — há reclamação em aberto, e convite comercial só depois de resolvê-la. Resolvido o caso, a oferta pode entrar na conversa.`
 
 ### 4.3 Cena de demo
 
@@ -126,7 +164,7 @@ Quando uma ocorrência entra, o orquestrador executa a sequência que na v1 era 
 | Passageiros afetados | 42 |
 | Com contato cadastrado → mensagem pronta | 31 |
 | Sem contato → equipe do terminal + painel acionados | 11 |
-| Mensagens barradas por freio | 1 (oferta ao Carlos — sem consentimento) |
+| Mensagens barradas por freio | 1 (oferta de retorno ao Carlos — reclamação em aberto) |
 | Redações descartadas pelo validador → template | 1 (horário divergente) |
 | Custo de compensação do lote | R$ 1.840 |
 | Teto da ocorrência | R$ 2.000 |
