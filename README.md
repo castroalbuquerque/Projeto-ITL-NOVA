@@ -7,6 +7,26 @@ com qual compensação** — e essa lógica muda conforme o perfil do passageiro
 não caminho até ele. O ativo do protótipo é o motor de regras, visível na tela. A conversa é só a
 evidência.
 
+## Baixar e abrir, sem instalar nada
+
+Para quem só quer ver o protótipo — comitê, orientador, colega —, existe um arquivo único:
+
+**[`pacote/central-de-transparencia-v2.html`](pacote/central-de-transparencia-v2.html)** · 286 kB
+
+Abra o arquivo no GitHub, clique em *Download raw file*, e depois dê **duplo clique** no arquivo
+baixado: ele abre no navegador e funciona inteiro. Sem instalar nada, sem Node, sem servidor e sem
+internet — o HTML, o CSS, o JavaScript e o ícone estão todos dentro dele. É o "artefato único
+autocontido" que a seção 6.1 da spec v2 pede, e é o que se leva para a apresentação.
+
+Para gerar de novo, depois de mexer no código:
+
+```bash
+npm run empacotar   # reescreve pacote/central-de-transparencia-v2.html
+```
+
+O empacotador (`scripts/empacotar.ts`) recusa a gerar o arquivo se sobrar qualquer referência
+externa nele — é essa conferência que sustenta a promessa de rodar offline.
+
 ## Como rodar
 
 ```bash
@@ -15,6 +35,7 @@ npm run dev            # interface em http://localhost:5173
 npm test               # 19 asserções: motor, ordem de corte e validador de fatos
 npm run build          # typecheck e build de produção
 npm run gerar:conteudo # reescreve o registro de conteudo-v2/ a partir de src/dadosV2.ts
+npm run empacotar      # gera o arquivo único de pacote/, para baixar e abrir com duplo clique
 ```
 
 Sem backend, sem `.env`, sem chamada a API em runtime, sem biblioteca de componentes, sem router.
@@ -82,7 +103,10 @@ src/
     Honestidade.tsx v2: o quadro "o que é real e o que é simulado"
 scripts/
   gerar_conteudo_v2.ts   monta prompt e pacote de fatos; a chamada de modelo é manual
+  empacotar.ts           costura CSS, JavaScript e ícone em um HTML só
 conteudo-v2/             prompt, fatos, saída bruta e saída aprovada, versionados
+pacote/                  o arquivo único distribuível, gerado por npm run empacotar
+vite.config.pacote.ts    build de um pedaço só de JS e CSS, para o empacotador costurar
 ```
 
 ### As regras
@@ -123,56 +147,64 @@ B0 e B1 respondem perguntas diferentes e não devem ser fundidos: alcance decide
 mensagem sai, autorização decide só se pode haver mensagem comercial. Os dois bloqueios se acumulam
 — quem não tem contato nem autorização aparece barrado duas vezes, com dois motivos distintos.
 
-## Roteiro de demo, 4 minutos
+## Roteiro de demonstração, 7 minutos
 
-1. **Quebra, na Capital–Interior** (~40 s). Dispare *Quebra de veículo*. Mariana e Carlos recebem
-   textos diferentes na mesma falha: ela o reparador com crédito de 30%, ele o de reconquista, que
+Um roteiro só, com a v1 e a v2 na mesma ordem em que a história se conta: primeiro a decisão, depois
+quem escreve, depois a escala. Cada passo diz onde clicar. Se houver só quatro minutos, faça os
+passos 1 a 5 e o 11 — são eles que sustentam o argumento inteiro.
+
+1. **A quebra, e por que dois passageiros recebem textos diferentes** (~40 s). Viagem
+   *Capital–Interior*, botão *Quebra de veículo*. Mariana e Carlos são avisados de formas
+   diferentes na mesma falha: ela no tom reparador, com crédito de 30%; ele no de reconquista, que
    reconhece a viagem anterior sem aviso. Clique em cada um e leia o canhoto à direita: a ligação
-   dela sai em 10 minutos pela R3, a dele em 5 pela R3b.
-2. **Cancelamento com teto, na Capital–Sul** (~60 s). Resete, troque a viagem e dispare
+   dela sai em 10 minutos pela R3, a dele em 5 pela R3b. É a v1 inteira em um clique — o motor
+   decide, a conversa é só a evidência.
+2. **A mesma quebra, escrita por IA** (~45 s). No topo da conversa, o seletor *quem escreve* está
+   em *Template (v1)*: os textos escritos à mão. Troque para *Redação por IA (v2)*: os mesmos
+   Mariana e Carlos, agora com o texto do agente entrando palavra a palavra. Clique em cada um e
+   leia o bloco *Redação* no canhoto — `Fatos validados: horário ✓ · valor ✓ · nome ✓ · canal ✓`.
+   O agente escreveu ao redor de fatos que não pode alterar.
+3. **A redação que foi descartada** (~30 s). Ainda em modo IA, desça até o Diego: a redação sai com
+   07h05 onde o fato travado diz 07h15, o validador a barra antes de qualquer exibição como
+   enviada, ela aparece riscada e o template da v1 é enviado no lugar. O canhoto registra o motivo.
+   É a cena que separa personalização bonita de personalização controlada.
+4. **O lote inteiro, e a conta contra o teto** (~40 s). Coluna da esquerda, *Orquestrador (v2)* →
+   *Painel do lote*: 42 afetados, 31 com mensagem pronta, 11 pelo terminal, 1 barrada pelo freio de
+   permissão, 1 redação descartada, R$ 1.840 contra um teto de R$ 2.000. Clique em *Aprovar lote* e
+   olhe a coluna da direita: a tela "Os números da ocorrência" está preenchida com os mesmos
+   números. *Ver variação com estouro de teto* mostra a ordem de corte, aplicada pelo motor de
+   regras e não pelo agente. Os números do lote ficam na tela até você clicar em *Resetar*.
+5. **A ouvidoria: a fila e o copiloto** (~70 s). *Voltar à conversa* e, na fila de casos à direita,
+   clique em *Abrir no copiloto* no caso do Carlos — ele está no topo porque a reclamação de seis
+   meses nunca foi respondida. Dossiê montado, proposta em streaming e a nota de guardrail
+   explicando por que a oferta de retorno ficou de fora. Clique em *Editar*, troque uma palavra,
+   clique em *Aprovar texto editado*: nada sai sem esse clique. Para ver a fila crescer pelo
+   caminho da v1, volte à conversa, clique em *Concluir viagem* e dê nota 4 ao Carlos — o caso
+   entra com prioridade elevada e prazo de 24 h; a mesma nota para Mariana entra com 72 h.
+6. **Cancelamento com teto, na Capital–Sul** (~60 s). *Resetar*, troque a viagem e dispare
    *Cancelamento*. Ana Paula mantém o crédito de 20%; Beatriz e Diego perdem o seu. Nos números:
    R$ 2.604 pedidos, R$ 1.984 pagos, 10 cortes, começando pelos dois de menos histórico. Reembolso
    e lugar em outro horário permanecem nas três decisões — o teto não os alcança.
-3. **Atraso noturno, na Capital–Nordeste** (~40 s). Resete e dispare *Atraso longo*. Diego é avisado
+7. **Atraso noturno, na Capital–Nordeste** (~40 s). Resete e dispare *Atraso longo*. Diego é avisado
    em 3 minutos. Rosa, do grupo mais valioso da base, não recebe nada: sai painel de partidas e
    instrução ao guichê, com moldura diferente porque não é conversa. A cobertura cai para 50% e o
    número em destaque marca 1.
-4. **Marco: Letícia e Marcos** (~40 s). Em *gatilho de pessoa*, escolha Letícia e dispare *Marco* —
+8. **Marco: Letícia e Marcos** (~40 s). Em *gatilho de pessoa*, escolha Letícia e dispare *Marco* —
    convite de subida de classe, sem desconto e sem pedir nada em troca. Troque para Marcos, mesmo
    ritmo de viagem e autorização dada, e dispare de novo: B0. Ele é o caso que separa alcance de
    autorização; nos outros dez, as duas coisas andam juntas.
-5. **Win-back, quatro respostas** (~50 s). Dispare *Win-back* para os quatro que sumiram. Jorge
+9. **Win-back, quatro respostas** (~50 s). Dispare *Win-back* para os quatro que sumiram. Jorge
    recebe o convite, ancorado no que mudou na linha que ele usava. Helena e Carlos recebem desculpa
    e nenhuma oferta, porque cada um tem um caso aberto — e o convite deles fica retido, ela só pelo
    caso (B4), ele pelo caso e pela falta de autorização (B1 e B4). Sandra não recebe nada: B0 e B1.
    A mensagem de reparação alcança Carlos sem que ele tenha autorizado nada, e é esse o ponto:
    resolver o caso de quem pagou é atendimento, não propaganda.
-6. **Padrão de não embarque: Wilson** (~25 s). Dispare *Padrão de não embarque*. R8 aplicada,
-   nenhuma mensagem, registro interno de caso para investigação. É o motor decidindo não agir.
-7. **A ouvidoria** (~30 s). Volte à Capital–Interior, dispare a quebra, clique em *Concluir viagem*
-   e dê nota 4 ao Carlos. O caso entra na fila com prioridade elevada e prazo de 24 h, porque ele já
-   tinha ocorrência aberta. A mesma nota para Mariana entra com 72 h.
-
-## Roteiro de demo da v2, 3 minutos
-
-1. **F1, o contraste numa tela** (~60 s). Na Capital–Interior, dispare *Quebra de veículo* e
-   deixe o topo da conversa em *Template (v1)*: são os textos escritos à mão. Troque para
-   *Redação por IA (v2)*: os mesmos Mariana e Carlos, agora com o texto do agente entrando palavra
-   a palavra. Clique em cada um e leia o bloco *Redação* no canhoto — `Fatos validados: horário ✓ ·
-   valor ✓ · nome ✓ · canal ✓`.
-2. **F1, o descarte** (~30 s). Ainda em modo IA, desça até o Diego: a redação sai com 07h05, o
-   validador a barra antes de qualquer exibição como enviada, ela aparece riscada e o template da
-   v1 é enviado no lugar. O canhoto registra o motivo. É a cena que separa personalização bonita
-   de personalização controlada.
-3. **F2, o caso do Carlos** (~60 s). Na fila de casos, clique em *Abrir no copiloto*: dossiê
-   montado, proposta em streaming e a nota de guardrail explicando por que a oferta de retorno
-   ficou de fora. Clique em *Editar*, troque uma palavra, clique em *Aprovar texto editado*. Nada
-   sai sem esse clique.
-4. **F3, o lote** (~30 s). Em *Orquestrador (v2)*, abra o *Painel do lote*: 42 afetados, 31 com
-   mensagem pronta, 11 pelo terminal, 1 barrada pelo freio, 1 redação descartada, R$ 1.840 contra
-   um teto de R$ 2.000. Clique em *Aprovar lote* e olhe a coluna da direita: a tela "Os números da
-   ocorrência" da v1 está preenchida com os mesmos números. *Ver variação com estouro de teto*
-   mostra a ordem de corte, aplicada pelo motor.
+10. **Padrão de não embarque: Wilson** (~25 s). Dispare *Padrão de não embarque*. R8 aplicada,
+    nenhuma mensagem, registro interno de caso para investigação. É o motor decidindo não agir.
+11. **Fechamento: o que é real e o que é simulado** (~20 s). Botão no canto direito do cabeçalho.
+    A lógica de decisão roda de verdade; os textos de IA foram gerados antes da apresentação e
+    embutidos aqui; passageiros, viagens e valores são inventados; e a hipótese de que isso reduz
+    evasão continua sendo hipótese.
 
 ## Hipóteses não validadas
 

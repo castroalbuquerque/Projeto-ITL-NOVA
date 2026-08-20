@@ -303,7 +303,10 @@ export default function App() {
               </span>
             )}
           </div>
-          <div className="min-h-0 flex-1">
+          {/* Sem flex-1: o canhoto cresce com o conteúdo e a coluna inteira rola.
+              Com altura fixa ele transbordava por cima dos números da ocorrência
+              assim que o lote aprovado e o bloco de redação entraram na tela. */}
+          <div className="shrink-0">
             <Inspetor eventos={eventos} selecionadoId={selecionadoId} modoIA={modoIA} />
           </div>
           {doLote && (

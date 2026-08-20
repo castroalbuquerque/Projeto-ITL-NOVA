@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "gerar:conteudo": "node --experimental-strip-types scripts/gerar_conteudo_v2.ts"
+    "gerar:conteudo": "node --experimental-strip-types scripts/gerar_conteudo_v2.ts",
+    "empacotar": "vite build --config vite.config.pacote.ts && node --experimental-strip-types scripts/empacotar.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
